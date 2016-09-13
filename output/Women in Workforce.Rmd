@@ -17,11 +17,11 @@ ss14pusb = read.csv(file.choose(),header=TRUE)
 ```{r}
 attach(ss14pusa)
 names(ss14pusa)
-ss14pusa_edit = data.frame(SEX,OCCP,WKHP,FMARP,WAGP,SCHL,ESP,FOD1P,SCHL)
+ss14pusa_edit = data.frame(SEX,FSEXP,OCCP,FOCCP,WKHP,FWKHP,MAR,FMARP,WAGP,FWAGP,SCHL,FSCHLP,ESP,FOD1P,SCHL,FSCHL)
 detach(ss14pusa)
 
 attach(ss14pusb)
-ss14pusb_edit = data.frame(SEX,OCCP,WKHP,FMARP,WAGP,SCHL,ESP,FOD1P,SCHL)
+ss14pusb_edit = data.frame(SEX,FSEXP,OCCP,FOCCP,WKHP,FWKHP,MAR,FMARP,WAGP,FWAGP,SCHL,FSCHLP,ESP,FOD1P,SCHL,FSCHL)
 detach(ss14pusb)
 
 Data = rbind(ss14pusa_edit,ss14pusb_edit)
