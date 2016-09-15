@@ -16,11 +16,11 @@ require(dplyr)
 ```{r}
 attach(ss14pusa)
 names(ss14pusa)
-ss14pusa_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC, PWGTP)
+ss14pusa_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, NOC, PWGTP)
 detach(ss14pusa)
 
 attach(ss14pusb)
-ss14pusb_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC, PWGTP)
+ss14pusb_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, NOC, PWGTP)
 detach(ss14pusb)
 
 Data = rbind(ss14pusa_edit,ss14pusb_edit)
@@ -33,7 +33,7 @@ write.csv(Data, file = "Data.csv",row.names=TRUE)
 
 ```{r, echo = FALSE}
 #recode OCCP
-Data$Occupation <- as.numeric(Data$Occupation)
+class(Data$Occupation) <- "numeric"
 Data$Occupation <- ifelse(Data$Occupation >= 10 & Data$Occupation <= 430, 1, Data$Occupation)
 Data$Occupation <- ifelse(Data$Occupation >= 1005 & Data$Occupation <= 1240, 2, Data$Occupation)
 Data$Occupation <- ifelse(Data$Occupation >= 800 & Data$Occupation <= 950, 3, Data$Occupation)
@@ -97,10 +97,15 @@ ggplot(Data_sex_occp, aes(x=Occupation, y=MEAN, fill=factor(Gender))) +
 
 ```{r, echo = FALSE}
 #subset on women, explore groups of women
-#Race
-#Motherhood
-#Marital Status
+Data_women <- filter(Data, Gender == 2)
+#Race - Catherine
+#Motherhood - 
+#Marital Status - Erica (potentially add in region)
 #Proportion of graduate degrees in each occupation?
-#Region
+#Region - Vivien
+
+```
+
+```{r, echo = FALSE}
 
 ```
