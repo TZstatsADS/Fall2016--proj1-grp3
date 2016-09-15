@@ -25,3 +25,22 @@ colnames(Data) <- c("Gender","Occupation", "Work_hours", "Marriage", "Income", "
 
 write.csv(Data, file = "Data.csv",row.names=TRUE)
 ```
+
+
+```{r, echo = FALSE}
+#recode OCCP
+
+Data$OCCP <- ifelse(Data$OCCP >= 10 & Data$OCCP <= 430, 1, Data$OCCP)
+Data$OCCP <- ifelse(Data$OCCP >= 1005 & Data$OCCP <= 1240, 2, Data$OCCP)
+Data$OCCP <- ifelse(Data$OCCP >= 800 & Data$OCCP <= 950, 3, Data$OCCP)
+Data$OCCP <- ifelse(Data$OCCP >= 2105 & Data$OCCP <= 2160, 4, Data$OCCP)
+Data$OCCP <- ifelse(Data$OCCP >= 3000 & Data$OCCP <= 3540, 5, Data$OCCP)
+Data$OCCP <- ifelse(Data$OCCP >= 510 & Data$OCCP <= 740, 6, Data$OCCP)
+Data$OCCP <- ifelse(Data$OCCP >= 1300 & Data$OCCP <= 1560, 7, Data$OCCP)
+Data$OCCP <- ifelse(Data$OCCP >= 1600 & Data$OCCP <= 1965, 8, Data$OCCP)
+
+Data <- filter(Data, OCCP %in% c(1:8))
+Data$OCCP <- as.factor(Data$OCCP)
+
+levels(Data$OCCP) <- c('MGR', 'CMM', 'FIN', 'LGL', 'MED' , 'BUS', 'ENG', 'SCI')
+```
