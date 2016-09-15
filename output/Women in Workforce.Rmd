@@ -3,10 +3,6 @@ title: "Women in Work Force"
 output: html_notebook
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
-
 ```{r} 
 #Importing Data Set
 ss14pusa = read.csv(file.choose(),header=TRUE)  # read csv file
@@ -17,19 +13,58 @@ ss14pusb = read.csv(file.choose(),header=TRUE)
 ```{r}
 attach(ss14pusa)
 names(ss14pusa)
-ss14pusa_edit = data.frame(SEX,FSEXP,OCCP,FOCCP,WKHP,FWKHP,MAR,FMARP,WAGP,FWAGP,SCHL,FSCHLP,ESP,FOD1P,SCHL,FSCHL)
+ss14pusa_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC)
 detach(ss14pusa)
 
 attach(ss14pusb)
-ss14pusb_edit = data.frame(SEX,FSEXP,OCCP,FOCCP,WKHP,FWKHP,MAR,FMARP,WAGP,FWAGP,SCHL,FSCHLP,ESP,FOD1P,SCHL,FSCHL)
+ss14pusb_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC)
 detach(ss14pusb)
 
 Data = rbind(ss14pusa_edit,ss14pusb_edit)
-Data
+colnames(Data) <- c("Gender","Occupation", "Work_hours", "Marriage", "Income", "Education" ,"Parental_Occupation", "Race", "Region", "Children")
+rm(ss14pusb_edit)
+rm(ss14pusa_edit)
 
 write.csv(Data, file = "Data.csv",row.names=TRUE)
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+```{r, echo = FALSE}
+#recode OCCP
+
+Data$OCCP <- ifelse(Data$OCCP >= 10 & Data$OCCP <= 430, 1, Data$OCCP)
+Data$OCCP <- ifelse(Data$OCCP >= 1005 & Data$OCCP <= 1240, 2, Data$OCCP)
+Data$OCCP <- ifelse(Data$OCCP >= 800 & Data$OCCP <= 950, 3, Data$OCCP)
+Data$OCCP <- ifelse(Data$OCCP >= 2105 & Data$OCCP <= 2160, 4, Data$OCCP)
+Data$OCCP <- ifelse(Data$OCCP >= 3000 & Data$OCCP <= 3540, 5, Data$OCCP)
+Data$OCCP <- ifelse(Data$OCCP >= 510 & Data$OCCP <= 740, 6, Data$OCCP)
+Data$OCCP <- ifelse(Data$OCCP >= 1300 & Data$OCCP <= 1560, 7, Data$OCCP)
+Data$OCCP <- ifelse(Data$OCCP >= 1600 & Data$OCCP <= 1965, 8, Data$OCCP)
+
+Data <- filter(Data, OCCP %in% c(1:8))
+Data$OCCP <- as.factor(Data$OCCP)
+
+levels(Data$OCCP) <- c('MGR', 'CMM', 'FIN', 'LGL', 'MED' , 'BUS', 'ENG', 'SCI')
+```
+
+```{r, echo = FALSE}
+#add in weights...example code from previous project:
+#Example: How to calulate the mean and standard error of Income level using weights utilizing the "Survey" package
+
+library(survey)
+df1<-svrepdesign(variables=pus_new[,1:13], 
+repweights=pus_new[,14:93], type="BRR",combined.weights=TRUE,
+weights=pus_new$PWGTP)
+summary(df1)
+svymean(~ WAGP,df1, na.rm = T)
+
+#If We only want to know the SE and Mean of Statistics Income?
+
+pus_new$FOD1P[pus_new$FOD1P == 3702 | pus_new$FOD1P == 6212 | pus_new$FOD1P == 6202]<-"Statistics"
+df<-subset(pus_new, pus_new$FOD1P=="Statistics")
+df2<-svrepdesign(variables=df[,1:13], 
+repweights=df[,14:93], type="BRR",combined.weights=TRUE,
+weights=df$PWGTP)
+summary(df2)
+svymean(~ WAGP,df2, na.rm = T)
+```
