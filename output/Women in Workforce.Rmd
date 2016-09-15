@@ -33,7 +33,7 @@ write.csv(Data, file = "Data.csv",row.names=TRUE)
 
 ```{r, echo = FALSE}
 #recode OCCP
-Data$Occupation <- as.numeric(Data$Occupation)
+class(Data$Occupation) <- "numeric"
 Data$Occupation <- ifelse(Data$Occupation >= 10 & Data$Occupation <= 430, 1, Data$Occupation)
 Data$Occupation <- ifelse(Data$Occupation >= 1005 & Data$Occupation <= 1240, 2, Data$Occupation)
 Data$Occupation <- ifelse(Data$Occupation >= 800 & Data$Occupation <= 950, 3, Data$Occupation)
