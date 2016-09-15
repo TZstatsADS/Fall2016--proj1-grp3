@@ -52,13 +52,14 @@ levels(Data$Occupation) <- c('MGR', 'CMM', 'FIN', 'LGL', 'MED' , 'BUS', 'ENG', '
 #https://en.wikipedia.org/wiki/List_of_regions_of_the_United_States#/media/File:Census_Regions_and_Division_of_the_United_States.svg
 Data$Region <- recode(Data$State,"c(09,23,25,33,44,59,34,36,42)='Northeast';c(17,18,26,38,55,19,20,27,29,31,38,46)='Mid West'; c(10,12,13,24,37,45,51,11,54,01,21,28,47,05,22,40,48)='South';c(04,08,16,30,32,35,49,50,02,06,15,41,53)='West'))
 
+#Recode Education
+Data$Education <- recode(Data$Education,"c(01,02,03,04,05,06,07,08,09,10,11)='~greade8';c(12,13,14,15,16,17,18,19)='grade9~college_nodegree';c(20,21)='associate/bachelor';c(22,23)='master/professional';c(24)='doctor')
+
 ```
 
 ```{r, echo = FALSE}
 #add in weights...example code from previous project:
-#Example: How to calulate the mean and standard error of Income level using weights utilizing the "Survey package
 
-library(survey)
 df1<-svrepdesign(variables=pus_new[,1:13], 
 repweights=pus_new[,14:93], type="BRR",combined.weights=TRUE,
 weights=pus_new$PWGTP)
@@ -79,6 +80,7 @@ svymean(~ WAGP,df2, na.rm = T)
 ```{r, echo = FALSE}
 
 #median wage for each occupation by gender (just to acknowledge that there *is* a gender gap)
+
 Data_sex_occp <- ddply(Data, .(Gender, Occupation), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
 ggplot(Data_sex_occp, aes(x=Occupation, y=MEAN, fill=factor(Gender))) + 
   geom_bar(stat="identity",position="dodge") + 
@@ -90,5 +92,15 @@ ggplot(Data_sex_occp, aes(x=Occupation, y=MEAN, fill=factor(Gender))) +
   theme(axis.text.x = element_text(angle = 30, hjust = 1), 
         panel.background = element_rect(fill = 'white' )) + 
   theme_grey(base_size = 12)
+
+```
+
+```{r, echo = FALSE}
+#subset on women, explore groups of women
+#Race
+#Motherhood
+#Marital Status
+#Proportion of graduate degrees in each occupation?
+#Region
 
 ```
