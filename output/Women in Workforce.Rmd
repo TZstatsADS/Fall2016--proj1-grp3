@@ -44,3 +44,25 @@ Data$OCCP <- as.factor(Data$OCCP)
 
 levels(Data$OCCP) <- c('MGR', 'CMM', 'FIN', 'LGL', 'MED' , 'BUS', 'ENG', 'SCI')
 ```
+
+```{r, echo = FALSE}
+#add in weights...example code from previous project:
+#Example: How to calulate the mean and standard error of Income level using weights utilizing the "Survey" package
+
+library(survey)
+df1<-svrepdesign(variables=pus_new[,1:13], 
+repweights=pus_new[,14:93], type="BRR",combined.weights=TRUE,
+weights=pus_new$PWGTP)
+summary(df1)
+svymean(~ WAGP,df1, na.rm = T)
+
+#If We only want to know the SE and Mean of Statistics Income?
+
+pus_new$FOD1P[pus_new$FOD1P == 3702 | pus_new$FOD1P == 6212 | pus_new$FOD1P == 6202]<-"Statistics"
+df<-subset(pus_new, pus_new$FOD1P=="Statistics")
+df2<-svrepdesign(variables=df[,1:13], 
+repweights=df[,14:93], type="BRR",combined.weights=TRUE,
+weights=df$PWGTP)
+summary(df2)
+svymean(~ WAGP,df2, na.rm = T)
+```
