@@ -16,11 +16,11 @@ require(dplyr)
 ```{r}
 attach(ss14pusa)
 names(ss14pusa)
-ss14pusa_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC, PWGTP)
+ss14pusa_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, NOC, PWGTP)
 detach(ss14pusa)
 
 attach(ss14pusb)
-ss14pusb_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC, PWGTP)
+ss14pusb_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, NOC, PWGTP)
 detach(ss14pusb)
 
 Data = rbind(ss14pusa_edit,ss14pusb_edit)
@@ -98,10 +98,14 @@ ggplot(Data_sex_occp, aes(x=Occupation, y=MEAN, fill=factor(Gender))) +
 ```{r, echo = FALSE}
 #subset on women, explore groups of women
 Data_women <- filter(Data, Gender == 2)
-#Race - Catherin
+#Race - Catherine
 #Motherhood - 
 #Marital Status - Erica (potentially add in region)
 #Proportion of graduate degrees in each occupation?
 #Region - Vivien
+
+```
+
+```{r, echo = FALSE}
 
 ```
