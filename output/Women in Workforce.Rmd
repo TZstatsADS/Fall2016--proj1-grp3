@@ -13,15 +13,18 @@ ss14pusb = read.csv(file.choose(),header=TRUE)
 ```{r}
 attach(ss14pusa)
 names(ss14pusa)
-ss14pusa_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, REGION)
+ss14pusa_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC)
 detach(ss14pusa)
 
 attach(ss14pusb)
-ss14pusb_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, REGION)
+ss14pusb_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC)
 detach(ss14pusb)
 
 Data = rbind(ss14pusa_edit,ss14pusb_edit)
-colnames(Data) <- c("Gender","Occupation", "Work_hours", "Marriage", "Income", "Education" "Parental_Occupation", "Race", "Region")
+rm(ss14pusb_edit)
+rm(ss14pusa_edit)
+
+colnames(Data) <- c("Gender","Occupation", "Work_hours", "Marriage", "Income", "Education" "Parental_Occupation", "Race", "Region", "Children")
 
 write.csv(Data, file = "Data.csv",row.names=TRUE)
 ```
