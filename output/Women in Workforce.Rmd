@@ -97,7 +97,7 @@ ggplot(Data_sex_occp, aes(x=Occupation, y=MEAN, fill=factor(Gender))) +
 
 ```{r, echo = FALSE}
 #subset on women, explore groups of women
-Data_women <- filter(Data, Sex = 2)
+Data_women <- filter(Data, Gender == 2)
 #Race - Catherin
 #Motherhood - 
 #Marital Status - Erica (potentially add in region)
