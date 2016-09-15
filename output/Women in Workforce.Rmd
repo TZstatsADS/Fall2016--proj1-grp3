@@ -14,6 +14,14 @@ require(dplyr)
 ```
 
 ```{r}
+#Importing Data Set in a faster way
+library(data.table)
+variables=c("SEX","OCCP","WKHP","MAR","WAGP","SCHL","ESP","RAC1P","ST","PAOC","PWGTP")
+ss14pusa=fread("C:/Users/user/Desktop/Statistics/3rd semester/ADS/Project1/csv_pus/ss14pusa.csv",head=TRUE,select=variables)
+ss14pusb=fread("C:/Users/user/Desktop/Statistics/3rd semester/ADS/Project1/csv_pus/ss14pusb.csv",head=TRUE,select=variables)
+```
+
+```{r}
 attach(ss14pusa)
 names(ss14pusa)
 ss14pusa_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, NOC, PWGTP)
