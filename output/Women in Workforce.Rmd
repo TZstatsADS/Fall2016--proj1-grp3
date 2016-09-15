@@ -8,22 +8,24 @@ output: html_notebook
 ss14pusa = read.csv(file.choose(),header=TRUE)  # read csv file
 ss14pusb = read.csv(file.choose(),header=TRUE)
 
+#Libraries
+require(plyr)
+require(dplyr)
 ```
 
 ```{r}
 attach(ss14pusa)
 names(ss14pusa)
-ss14pusa_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC)
+ss14pusa_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC, PWGTP)
 detach(ss14pusa)
 
 attach(ss14pusb)
-ss14pusb_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC)
+ss14pusb_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC, PWGTP)
 detach(ss14pusb)
 
 Data = rbind(ss14pusa_edit,ss14pusb_edit)
-colnames(Data) <- c("Gender","Occupation", "Work_hours", "Marriage", "Income", "Education" ,"Parental_Occupation", "Race", "Region", "Children")
-rm(ss14pusb_edit)
-rm(ss14pusa_edit)
+colnames(Data) <- c("Gender","Occupation", "Work_hours", "Marriage", "Income", "Education" ,"Parental_Occupation", "Race", "State", "Children", "Weight")
+
 
 write.csv(Data, file = "Data.csv",row.names=TRUE)
 ```
@@ -31,25 +33,30 @@ write.csv(Data, file = "Data.csv",row.names=TRUE)
 
 ```{r, echo = FALSE}
 #recode OCCP
+Data$Occupation <- as.numeric(Data$Occupation)
+Data$Occupation <- ifelse(Data$Occupation >= 10 & Data$Occupation <= 430, 1, Data$Occupation)
+Data$Occupation <- ifelse(Data$Occupation >= 1005 & Data$Occupation <= 1240, 2, Data$Occupation)
+Data$Occupation <- ifelse(Data$Occupation >= 800 & Data$Occupation <= 950, 3, Data$Occupation)
+Data$Occupation <- ifelse(Data$Occupation >= 2105 & Data$Occupation <= 2160, 4, Data$Occupation)
+Data$Occupation <- ifelse(Data$Occupation >= 3000 & Data$Occupation <= 3540, 5, Data$Occupation)
+Data$Occupation <- ifelse(Data$Occupation >= 510 & Data$Occupation <= 740, 6, Data$Occupation)
+Data$Occupation <- ifelse(Data$Occupation >= 1300 & Data$Occupation <= 1560, 7, Data$Occupation)
+Data$Occupation <- ifelse(Data$Occupation >= 1600 & Data$Occupation <= 1965, 8, Data$Occupation)
 
-Data$OCCP <- ifelse(Data$OCCP >= 10 & Data$OCCP <= 430, 1, Data$OCCP)
-Data$OCCP <- ifelse(Data$OCCP >= 1005 & Data$OCCP <= 1240, 2, Data$OCCP)
-Data$OCCP <- ifelse(Data$OCCP >= 800 & Data$OCCP <= 950, 3, Data$OCCP)
-Data$OCCP <- ifelse(Data$OCCP >= 2105 & Data$OCCP <= 2160, 4, Data$OCCP)
-Data$OCCP <- ifelse(Data$OCCP >= 3000 & Data$OCCP <= 3540, 5, Data$OCCP)
-Data$OCCP <- ifelse(Data$OCCP >= 510 & Data$OCCP <= 740, 6, Data$OCCP)
-Data$OCCP <- ifelse(Data$OCCP >= 1300 & Data$OCCP <= 1560, 7, Data$OCCP)
-Data$OCCP <- ifelse(Data$OCCP >= 1600 & Data$OCCP <= 1965, 8, Data$OCCP)
+Data <- filter(Data, Occupation %in% c(1:8))
+Data$Occupation <- as.factor(Data$Occupation)
 
-Data <- filter(Data, OCCP %in% c(1:8))
-Data$OCCP <- as.factor(Data$OCCP)
+levels(Data$Occupation) <- c('MGR', 'CMM', 'FIN', 'LGL', 'MED' , 'BUS', 'ENG', 'SCI')
 
-levels(Data$OCCP) <- c('MGR', 'CMM', 'FIN', 'LGL', 'MED' , 'BUS', 'ENG', 'SCI')
+#Recode Region
+#https://en.wikipedia.org/wiki/List_of_regions_of_the_United_States#/media/File:Census_Regions_and_Division_of_the_United_States.svg
+Data$Region <- recode(Data$State,"c(09,23,25,33,44,59,34,36,42)='Northeast';c(17,18,26,38,55,19,20,27,29,31,38,46)='Mid West'; c(10,12,13,24,37,45,51,11,54,01,21,28,47,05,22,40,48)='South';c(04,08,16,30,32,35,49,50,02,06,15,41,53)='West'))
+
 ```
 
 ```{r, echo = FALSE}
 #add in weights...example code from previous project:
-#Example: How to calulate the mean and standard error of Income level using weights utilizing the "Survey" package
+#Example: How to calulate the mean and standard error of Income level using weights utilizing the "Survey package
 
 library(survey)
 df1<-svrepdesign(variables=pus_new[,1:13], 
@@ -67,4 +74,21 @@ repweights=df[,14:93], type="BRR",combined.weights=TRUE,
 weights=df$PWGTP)
 summary(df2)
 svymean(~ WAGP,df2, na.rm = T)
+```
+
+```{r, echo = FALSE}
+
+#median wage for each occupation by gender (just to acknowledge that there *is* a gender gap)
+Data_sex_occp <- ddply(Data, .(Gender, Occupation), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
+ggplot(Data_sex_occp, aes(x=Occupation, y=MEAN, fill=factor(Gender))) + 
+  geom_bar(stat="identity",position="dodge") + 
+  scale_fill_brewer(palette="RdYlGn") +
+  labs(fill="") + 
+  ylab("Mean Salary ($)") + 
+  xlab("Occupations") + 
+  ggtitle(paste("Salary Comparison between Men & Women")) + 
+  theme(axis.text.x = element_text(angle = 30, hjust = 1), 
+        panel.background = element_rect(fill = 'white' )) + 
+  theme_grey(base_size = 12)
+
 ```
