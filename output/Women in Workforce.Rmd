@@ -21,10 +21,9 @@ ss14pusb_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC)
 detach(ss14pusb)
 
 Data = rbind(ss14pusa_edit,ss14pusb_edit)
+colnames(Data) <- c("Gender","Occupation", "Work_hours", "Marriage", "Income", "Education" "Parental_Occupation", "Race", "Region", "Children")
 rm(ss14pusb_edit)
 rm(ss14pusa_edit)
-
-colnames(Data) <- c("Gender","Occupation", "Work_hours", "Marriage", "Income", "Education" "Parental_Occupation", "Race", "Region", "Children")
 
 write.csv(Data, file = "Data.csv",row.names=TRUE)
 ```
