@@ -70,6 +70,13 @@ Data$Education <- recode(Data$Education,"c(01,02,03,04,05,06,07,08,09,10,11)='~g
 
 ```
 
+```{r}
+#Recode Education
+library(car)
+Data$Education <- recode(Data$Education,"1:11='~greade8';12:19='grade9~college_nodegree';20:21='associate/bachelor';22:23='master/professional';24='doctor'")
+```
+
+
 ```{r, echo = FALSE}
 #add in weights...example code from previous project:
 
