@@ -24,11 +24,11 @@ ss14pusb=fread("C:/Users/user/Desktop/Statistics/3rd semester/ADS/Project1/csv_p
 ```{r}
 attach(ss14pusa)
 names(ss14pusa)
-ss14pusa_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, NOC, PWGTP)
+ss14pusa_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC, PWGTP)
 detach(ss14pusa)
 
 attach(ss14pusb)
-ss14pusb_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, NOC, PWGTP)
+ss14pusb_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC, PWGTP)
 detach(ss14pusb)
 
 Data = rbind(ss14pusa_edit,ss14pusb_edit)
