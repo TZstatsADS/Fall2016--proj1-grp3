@@ -38,6 +38,11 @@ colnames(Data) <- c("Gender","Occupation", "Work_hours", "Marriage", "Income", "
 write.csv(Data, file = "Data.csv",row.names=TRUE)
 ```
 
+```{r}
+#Delete income=0/NA rows
+row_to_keep=which(Data$Income>0)
+Data=Data[row_to_keep,]
+```
 
 ```{r, echo = FALSE}
 #recode OCCP
