@@ -129,3 +129,78 @@ Data_women <- filter(Data, Gender == 2)
 ```{r, echo = FALSE}
 
 ```
+
+```{r, echo = FALSE}
+Data_women <- filter(Data, Gender == 2)
+MotherHood=select(Data_women, Income,Children)
+#detach(package:plyr)
+GroupedMotherHood <-
+  MotherHood %>%
+  na.omit() %>%
+  group_by(Children) %>% 
+  summarize(
+    AvgIncome = mean(Income)
+  ) 
+
+
+### Bar Chart
+ggplot(GroupedMotherHood, aes(x=Children, y=AvgIncome)) + 
+  geom_bar(colour="black", fill="#DD8888", width=.5, stat="identity") + 
+  guides(fill=FALSE) +
+  xlab("Children") + ylab("Mean Income") +
+  coord_cartesian(ylim = c(50000,70000)) +
+  #scale_y_continuous(limits = c(40000,70000),oob = rescale_none) +
+  ggtitle("Income for Motherhood")
+
+
+
+### 
+```
+
+```{r}
+MotherWorking=select(Data_women, Income,Children,Work_hours)
+#detach(package:plyr)
+GroupedMotherWorking <-
+  MotherWorking %>%
+  na.omit() %>%
+  group_by(Children,Work_hours) %>% 
+  summarize(
+    AvgIncome = mean(Income),
+    count=n()
+  ) 
+
+library(plotly)
+# note how size is automatically scaled and added as hover text
+
+plot_ly(GroupedMotherWorking, x = Work_hours, y = AvgIncome,size=sqrt(count), color = Children,text = paste("Count: ", count),opacity=1-Children*0.2,mode = "markers")
+
+#plot_ly(GroupedMotherWorking, x = Work_hours, y = AvgIncome, text = paste("Count: ", #count),mode = "markers", opacity=1-Children*0.2,color = Children)
+```
+Observations:
+1. When work_hours smaller than 60Hrs, Avg Income tend to be positively related to work hour.
+2. There are generally more females with no Children
+3. Females with Children from 6 to 17 often has higher avg income
+```{r}
+MotherOccupation=select(Data_women, Income,Children,Occupation)
+#detach(package:plyr)
+GroupedMotherOccupation <-
+  MotherOccupation %>%
+  na.omit() %>%
+  group_by(Children,Occupation) %>% 
+  summarize(
+    AvgIncome = mean(Income),
+    count=n()
+  ) 
+
+
+revalue(GroupedMotherOccupation$Children,c('1'='Children under 6','2'='Children from 6 to 17','3'='Children under 6 and above 6','4'='No Children'))
+
+ggplot(GroupedMotherOccupation,aes(x=Children))+geom_point(aes(y=Occupation,size=count,colour=AvgIncome))+scale_colour_gradient(low="green",high="red")+scale_x_continuous(breaks=1:4, labels=c("Children under 6", "Children from 6 to 17", "Children under 6 and above 6", "No Children")) 
+
+#scale_colour_gradientn(colours = terrain.colors(10))
+```
+Observations:
+1. Females with Children from 6 to 17 usually tend to have higher average income as the dot has darker color.
+2. Occupation of ENG, MGR and CMM usually tend to have higher salary. On the other hand, female in LGL field always have lower salary
+3. 
+
