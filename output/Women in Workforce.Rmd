@@ -237,43 +237,37 @@ Observations:
 ```{r}
 # Regional Effect
 # wanna know how to use survey weights
-# boxplot of each state/division/region to see distribution
-# calculate median of women in each Division and run significance test?
 # calculate median of women in each State and plot in mapview
 # Investigate in Occupation or other vavriables to see why
 
 DW=Data[Data$Gender==2, ]
+
+# boxplot of each state/division/region to see distribution
 require(plotly)
 plot_ly(DW, x = Income, color = Region, type = "box")
 plot_ly(DW, x = Income, color = Division, type = "box")
 boxplot(DW$Income~DW$State) 
 
-
-DR=cbind(DW$Income,DW$State)
-head(DR)
-
+# calculate median of women in each Division/Region/State
 library(dplyr)
 DivMedian <- aggregate(Income~Division,Data_women, median)
 RegMedian <- aggregate(Income~Region,Data_women, median)
-StateMedian <- aggregate(Income~State,Data_women, median)
-StateMedian$State
+StateMedian <- aggregate(Income~State,DW, median)
 
-require(googleVis)
-
- 
+# Recode State Names
 library(readr)
 statenames <- read_csv("~/Google Drive/Columbia/5243 ADS/Project 1/data/statenames.csv")
+names(StateMedian)[1]<-"code"
+State.Median <- merge(StateMedian, statenames, by="code")
+head(SM)
 
-StateMedian$State<- recode(StateMedian$State,"statenames$code=statenames$name")
-table(StateMedian$State)
-
-map <- gvisGeoMap(data=StateMedian, locationvar = "State", numvar='Income)',options=list(width='800px',heigth='500px',colors="['0x0000ff', '0xff0000']"))
+# plot state income median in mapview
+require(googleVis)
+map<-gvisGeoMap(data=State.Median, locationvar = "name", numvar="Income",options=list(region="US",dataMode="regions",width='800px',heigth='600px',gvis.editor = "Income Median of US States", colors="[0xEFEDF5, 0xA64D79]"))
 plot(map)
- 
-print(map,file="Map.html")
 
-xtabs(~Gender+Division, data=Data)
+
 ```
-
+From the graphs we see that the Northeast region, especially the New England Division, has higher income level than other parts of the States. The next question is why it happens, e.g. particular popular high-income occupations in certain regions?
 
 
