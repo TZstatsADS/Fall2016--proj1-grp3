@@ -103,6 +103,29 @@ library(car)
 Data$Education <- recode(Data$Education,"1:11='~greade8';12:19='grade9~college_nodegree';20:21='associate/bachelor';22:23='master/professional';24='doctor'")
 ```
 
+```{r}
+# On Survey Weights
+# http://tophcito.blogspot.co.at/2014/04/social-science-goes-r-weighted-survey.html We assign everyone that did make it into the sample a weight. So people that turn out too often in the sample receive a weight of less than 1. And those that we were not able to reach enough of are upweighted with a weight larger than 1. Respondents that belong to groups that have been sampled perfectly receive a weight of 1. This solution is called post-stratification, because it computes weights based on group (or stratum) characteristics, like the distribution of age or gender proportions.
+
+require(survey)
+Data.w = svydesign(ids = ~1, data = Data, weights = Data$Weight)
+summary(Data.w)
+
+# comparison of the sex ratios in the unweighted and the weighted data frames:
+prop.table(table(Data$Gender))
+prop.table(svytable(~Gender, design = Data.w))
+
+# Run this to see how it works
+table(Data$Gender)
+svytable(~Gender, design = Data.w)
+
+# Take my interested variable 'State' as an example, the difference between the unweighted and weighted ratio is really small
+prop.table(table(Data$State)) - prop.table(svytable(~State, design = Data.w))
+
+# Ultimately, the difference for each income level between unweighted and weighted is small too
+prop.table(table(Data$Income)) - prop.table(svytable(~Income, design = Data.w))
+
+```
 
 ```{r, echo = FALSE}
 #add in weights...example code from previous project:
