@@ -1,6 +1,6 @@
 ---
 title: "Women in Work Force"
-output: html_notebook
+output: html_document
 ---
 
 ```{r} 
@@ -76,9 +76,9 @@ levels(Data$Occupation) <- c('MGR', 'CMM', 'FIN', 'LGL', 'MED' , 'BUS', 'ENG', '
 ```{r}
 #Recode Region
 #https://en.wikipedia.org/wiki/List_of_regions_of_the_United_States#/media/File:Census_Regions_and_Division_of_the_United_States.svg
-<<<<<<< HEAD
+
 Data$Region <- recode(Data$State,c(09,23,25,33,44,59,34,36,42)='Northeast';c(17,18,26,38,55,19,20,27,29,31,38,46)='Mid West'; c(10,12,13,24,37,45,51,11,54,01,21,28,47,05,22,40,48)='South';c(04,08,16,30,32,35,49,50,02,06,15,41,53)='West'))
-=======
+
 require(car)
 Data$Region <- recode(Data$State,"c(09,23,25,33,44,59,34,36,42)='Northeast';c(17,18,26,38,55,19,20,27,29,31,38,46,39)='Midwest'; c(10,12,13,24,37,45,51,11,54,01,21,28,47,05,22,40,48)='South';c(04,08,16,30,32,35,49,50,02,06,15,41,53,56)='West';'72'='Puerto Rico'")
 ```
@@ -105,30 +105,9 @@ Data$Education <- recode(Data$Education,"1:11='~greade8';12:19='grade9~college_n
 
 
 ```{r, echo = FALSE}
-#add in weights...example code from previous project:
-
-df1<-svrepdesign(variables=pus_new[,1:13], 
-repweights=pus_new[,14:93], type="BRR",combined.weights=TRUE,
-weights=pus_new$PWGTP)
-summary(df1)
-svymean(~ WAGP,df1, na.rm = T)
-
-#If We only want to know the SE and Mean of Statistics Income?
-
-pus_new$FOD1P[pus_new$FOD1P == 3702 | pus_new$FOD1P == 6212 | pus_new$FOD1P == 6202]<-"Statistics"
-df<-subset(pus_new, pus_new$FOD1P=="Statistics")
-df2<-svrepdesign(variables=df[,1:13], 
-repweights=df[,14:93], type="BRR",combined.weights=TRUE,
-weights=df$PWGTP)
-summary(df2)
-svymean(~ WAGP,df2, na.rm = T)
-```
-
-```{r, echo = FALSE}
 
 #median wage for each occupation by gender (just to acknowledge that there *is* a gender gap)
 #factor marriage and change labels
-
 
 Data_sex_occp <- ddply(Data, .(Gender, Occupation), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
 ggplot(Data_sex_occp, aes(x=Occupation, y=MEAN, fill=factor(Gender))) + 
@@ -159,31 +138,39 @@ Data_women <- filter(Data_women, Age > 20 & Age < 66)
 
 ```{r, echo = FALSE}
 #marital status, subset at specific age to control for experience
-Women_40 <- subset(Data_women, Data_women$Age == 40)
-Data_women$Agegroup <- cut(as.numeric(Data_women$Age), breaks = c(20,25,30,35,40,45,50,55,60,65))
-
 Data_wed_occp <- ddply(Data_women, .(Marriage, Occupation, Age), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
 
 plot(Data_wed_occp$Age, Data_wed_occp$MEAN)
 
-summary(lm(MEAN ~ Marriage + Age + I(Age^2)) , data = Data_wed_occp))
+summary(lm(MEAN ~ Marriage + Age + I(Age^2) , data = Data_wed_occp))
 
 ggplot(Data_wed_occp,aes(y = MEAN, x =Age,colour=Marriage,shape=Marriage)) +
 geom_point() + geom_smooth(method="loess", fill=NA) + facet_wrap(~Occupation, scales= "free")
 
-#Finance
+#Finance (reduced plotly node size, add line, update titles )
 Women_FIN<-filter(Data_women, Occupation =="FIN")
 Data_wed_FIN <- ddply(Women_FIN, .(Marriage, Age), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
 
+#ggplot
 ggplot(Data_wed_FIN,aes(y = MEAN, x =Age,colour=Marriage,shape=Marriage)) +
 geom_point() + geom_smooth(method="loess", fill=NA)
 
-figure(width = NULL, height = NULL) %>%
+
+FIN <- figure(width = NULL, height = NULL) %>%
   ly_points(Age, MEAN, data = Data_wed_FIN,
-    color = Marriage,
+    color = Marriage, glyph = Marriage,
     hover = list(Marriage, Age))
+add_trace(y = fitted(loess(MEAN ~ Age)), x = Age))
+
+#plotly
+FIN <- plot_ly(Data_wed_FIN, x = Age, y = MEAN, mode = "markers", opacity = .4, color = Marriage, title = "Women in Finance") 
+FIN <-add_trace(FIN,y = fitted(loess(MEAN ~ Age + as.numeric(Marriage))) , x = Age, color = Marriage) 
+layout(FIN, title = "Women in Finance")
 
 summary(lm(MEAN ~ Marriage + Age + I(Age^2), data = Data_wed_FIN))
+
+
+#Engineering
 
 Women_ENG<-filter(Data_women, Occupation =="ENG")
 Data_wed_ENG <- ddply(Women_ENG, .(Marriage, Age), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
@@ -201,10 +188,12 @@ eng
 lm1 <- lm(MEAN ~ Marriage + Age + I(Age^2), data = Data_wed_ENG)
 summary(lm1)
 
-#medical field
+#Medicine
 
 Women_MED<-filter(Data_women, Occupation =="MED")
 Data_wed_MED <- ddply(Women_MED, .(Marriage, Age), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
+
+#ggplot
 
 ggplot(Data_wed_MED,aes(y = MEAN, x =Age,colour=Marriage,shape=Marriage)) +
 geom_point() + geom_smooth(method="loess", fill=NA)
@@ -217,11 +206,12 @@ med
 
 summary(lm(MEAN ~ Marriage + Age, data = Data_wed_MED))
 
-#scientist
+#Science
 
 Women_SCI<-filter(Data_women, Occupation =="SCI")
 Data_wed_SCI <- ddply(Women_SCI, .(Marriage, Age), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
 
+#ggplot
 ggplot(Data_wed_SCI,aes(y = MEAN, x =Age,colour=Marriage,shape=Marriage)) +
 geom_point() + geom_smooth(method="loess", fill=NA)
 
@@ -230,9 +220,9 @@ sci <- figure(width = NULL, height = NULL) %>%
     color = Marriage, glyph = as.factor(Marriage),
     hover = list(Marriage, Age))
 sci
-<<<<<<< HEAD
 
-summary(lm(MEAN ~ Marriage + Age, data = Data_wed_SCI))
+
+summary(lm(MEAN ~ Marriage + Age + I(Age^2), data = Data_wed_SCI))
 
 #Managers
 Women_MGR<-filter(Data_women, Occupation =="MGR")
@@ -261,7 +251,7 @@ lgl <- figure(width = NULL, height = NULL) %>%
     hover = list(Marriage, Age))
 lgl
 
-summary(lm(MEAN ~ Marriage + Age, data = Data_wed_LGL))
+summary(lm(MEAN ~ Marriage + Age + I(Age^2), data = Data_wed_LGL))
 
 
 #Business
