@@ -27,19 +27,17 @@ ss14pusb=fread("~/Google Drive/Data for R/csv_pus/ss14pusb.csv",head=TRUE,select
 ```{r}
 attach(ss14pusa)
 names(ss14pusa)
-<<<<<<< HEAD
 ss14pusa_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC, PWGTP, AGEP)
 detach(ss14pusa)
 
 attach(ss14pusb)
 ss14pusb_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC, PWGTP, AGEP)
-=======
 ss14pusa_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC, PWGTP)
 detach(ss14pusa)
 
 attach(ss14pusb)
 ss14pusb_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC, PWGTP)
->>>>>>> master
+
 detach(ss14pusb)
 
 Data = rbind(ss14pusa_edit,ss14pusb_edit)
@@ -76,7 +74,6 @@ levels(Data$Occupation) <- c('MGR', 'CMM', 'FIN', 'LGL', 'MED' , 'BUS', 'ENG', '
 ```{r}
 #Recode Region
 #https://en.wikipedia.org/wiki/List_of_regions_of_the_United_States#/media/File:Census_Regions_and_Division_of_the_United_States.svg
-<<<<<<< HEAD
 Data$Region <- recode(Data$State,c(09,23,25,33,44,59,34,36,42)='Northeast';c(17,18,26,38,55,19,20,27,29,31,38,46)='Mid West'; c(10,12,13,24,37,45,51,11,54,01,21,28,47,05,22,40,48)='South';c(04,08,16,30,32,35,49,50,02,06,15,41,53)='West'))
 =======
 require(car)
@@ -86,7 +83,6 @@ Data$Region <- recode(Data$State,"c(09,23,25,33,44,59,34,36,42)='Northeast';c(17
 # Recode Division
 Data$Division <- recode(Data$State,"c(53,41,6,2,15)='Pacific';c(4,8,16,30,32,35,49,56)='Mountain'; c(19,20,27,29,31,38,46)='West North Central';c(17,18,26,39,55)='East North Central';c(5,22,40,48)='West South Central';c(1,21,28,47)='East South Central';c(34,36,42)='Middle Atlantic';c(10,11,12,13,24,37,45,51,54)='South Atlantic';c(9,23,25,33,44,50)='New England'")
 ```
->>>>>>> master
 
 ```{r}
 #Recode Education
@@ -151,16 +147,6 @@ svymean(~ WAGP,df2, na.rm = T)
 ```{r, echo = FALSE}
 
 #median wage for each occupation by gender (just to acknowledge that there *is* a gender gap)
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
-require(ggplot2)
-=======
->>>>>>> Stashed changes
-#factor marriage and change labels
-
-
->>>>>>> origin/master
 Data_sex_occp <- ddply(Data, .(Gender, Occupation), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
 ggplot(Data_sex_occp, aes(x=Occupation, y=MEAN, fill=factor(Gender))) + 
   geom_bar(stat="identity",position="dodge") + 
@@ -189,11 +175,7 @@ Data_women <- filter(Data_women, Age > 20 & Age < 66)
 ```
 
 ```{r, echo = FALSE}
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
-=======
->>>>>>> Stashed changes
+
 #marital status, subset at specific age to control for experience
 Women_40 <- subset(Data_women, Data_women$Age == 40)
 Data_women$Agegroup <- cut(as.numeric(Data_women$Age), breaks = c(20,25,30,35,40,45,50,55,60,65))
@@ -266,7 +248,6 @@ sci <- figure(width = NULL, height = NULL) %>%
     color = Marriage, glyph = as.factor(Marriage),
     hover = list(Marriage, Age))
 sci
-<<<<<<< HEAD
 
 summary(lm(MEAN ~ Marriage + Age, data = Data_wed_SCI))
 
@@ -315,7 +296,6 @@ bus <- figure(width = NULL, height = NULL) %>%
 bus
 
 summary(lm(MEAN ~ Marriage + Age, data = Data_wed_BUS))
-<<<<<<< Updated upstream
 
 #Computer
 
@@ -323,7 +303,6 @@ summary(lm(MEAN ~ Marriage + Age, data = Data_wed_BUS))
 
 #Computer
 
->>>>>>> Stashed changes
 Women_CMM<-filter(Data_women, Occupation =="CMM")
 Data_wed_CMM <- ddply(Women_CMM, .(Marriage, Age), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
 
@@ -445,12 +424,12 @@ p <- plot_ly(Data_wed_occp, x = Age, y = MEAN,group = Occupation, text = paste("
         mode = "markers",  xaxis = paste0("x", Occupation), symbol = Marriage, jitter = .9)
 
 p<- subplot(p)
-``` ???
+``` 
 
->>>>>>> master
+
 
 ```{r, echo = FALSE}
->>>>>>> origin/master
+
 Data_women <- filter(Data, Gender == 2)
 MotherHood=select(Data_women, Income,Children)
 #detach(package:plyr)
