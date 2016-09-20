@@ -121,10 +121,10 @@ table(Data$Gender)
 svytable(~Gender, design = Data.w)
 
 # Take my interested variable 'State' as an example, the difference between the unweighted and weighted ratio is really small
-prop.table(table(Data$State)) - prop.table(svytable(~State, design = Data.w))
+as.data.frame(prop.table(table(Data$State)) - prop.table(svytable(~State, design = Data.w)))
 
 # Ultimately, the difference for each income level between unweighted and weighted is small too
-prop.table(table(Data$Income)) - prop.table(svytable(~Income, design = Data.w))
+as.data.frame(prop.table(table(Data$Income)) - prop.table(svytable(~Income, design = Data.w)))
 
 ```
 
@@ -381,7 +381,7 @@ p <- plot_ly(Data_wed_occp, x = Age, y = MEAN,group = Occupation, text = paste("
 p<- subplot(p)
 ```
 
-
+```{r}
 summary(lm(MEAN ~ Marriage + Age, data = Data_wed_SCI))
 
 #Managers
@@ -555,26 +555,33 @@ Observations:
 # wanna know how to use survey weights
 # calculate median of women in each State and plot in mapview
 # Investigate in Occupation or other vavriables to see why
+# Recode before boxplot
 
 DW=Data[Data$Gender==2, ]
+
+# Recode State Names before boxplot
+require(readr)
+statenames <- read_csv("~/Google Drive/Columbia/5243 ADS/Project 1/data/statenames.csv")
+names(DW)[9]<-"code"
+DW.n <- merge(DW, statenames, by="code")
+names(DW.n)
 
 # boxplot of each state/division/region to see distribution
 require(plotly)
 plot_ly(DW, x = Income, color = Region, type = "box")
 plot_ly(DW, x = Income, color = Division, type = "box")
-boxplot(DW$Income~DW$State) 
+#changing into state names is crowded, figuring interactive ways to present boxplot
+plot_ly(DW.n, y = Income, color = name, type = "box")
+
 
 # calculate median of women in each Division/Region/State
-
 require(dplyr)
-
-DivMedian <- aggregate(Income~Division,Data_women, median)
-RegMedian <- aggregate(Income~Region,Data_women, median)
-StateMedian <- aggregate(Income~State,DW, median)
+DivMedian <- aggregate(Income~Division,DW.n, median)
+RegMedian <- aggregate(Income~Region,DW.n, median)
+StateMedian <- aggregate(Income~name,DW.n, median)
 
 # Recode State Names
 require(readr)
-
 statenames <- read_csv("~/Google Drive/Columbia/5243 ADS/Project 1/data/statenames.csv")
 names(StateMedian)[1]<-"code"
 State.Median <- merge(StateMedian, statenames, by="code")
@@ -585,9 +592,15 @@ require(googleVis)
 map<-gvisGeoMap(data=State.Median, locationvar = "name", numvar="Income",options=list(region="US",dataMode="regions",width='800px',heigth='600px',gvis.editor = "Income Median of US States", colors="[0xEFEDF5, 0xA64D79]"))
 plot(map)
 
+#percentage median of women and men in each state to see cost of living
+
 
 ```
 From the graphs we see that the Northeast region, especially the New England Division, has higher income level than other parts of the States. The next question is why it happens, e.g. particular popular high-income occupations in certain regions?
+
+
+
+
 
 ##Race
 
