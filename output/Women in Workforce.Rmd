@@ -71,7 +71,7 @@ Data$Region <- recode(Data$State,"c(09,23,25,33,44,59,34,36,42)='Northeast';c(17
 ```
 ```{r}
 # Recode Division
-Data$Division <- recode(Data$State,"c(53,41,6,2,15)='Pacific';c(4,8,16,30,32,35,49,56)='Mountain'; c(19,20,27,29,31,38,46)='West North Central';c(17,18,26,39,55)='East North Central';c(5,22,40,48)='West South Central';c(1,21,28,47)='East South Central';c(34,36,42)='Middle Adlantic';c(10,11,12,13,24,37,45,51,54)='South Atlantic';c(9,23,25,33,44,50)='New England'")
+Data$Division <- recode(Data$State,"c(53,41,6,2,15)='Pacific';c(4,8,16,30,32,35,49,56)='Mountain'; c(19,20,27,29,31,38,46)='West North Central';c(17,18,26,39,55)='East North Central';c(5,22,40,48)='West South Central';c(1,21,28,47)='East South Central';c(34,36,42)='Middle Atlantic';c(10,11,12,13,24,37,45,51,54)='South Atlantic';c(9,23,25,33,44,50)='New England'")
 ```
 
 ```{r}
@@ -86,9 +86,33 @@ library(car)
 Data$Education <- recode(Data$Education,"1:11='~greade8';12:19='grade9~college_nodegree';20:21='associate/bachelor';22:23='master/professional';24='doctor'")
 ```
 
+```{r}
+# On Survey Weights
+# http://tophcito.blogspot.co.at/2014/04/social-science-goes-r-weighted-survey.html We assign everyone that did make it into the sample a weight. So people that turn out too often in the sample receive a weight of less than 1. And those that we were not able to reach enough of are upweighted with a weight larger than 1. Respondents that belong to groups that have been sampled perfectly receive a weight of 1. This solution is called post-stratification, because it computes weights based on group (or stratum) characteristics, like the distribution of age or gender proportions.
+
+require(survey)
+Data.w = svydesign(ids = ~1, data = Data, weights = Data$Weight)
+summary(Data.w)
+
+# comparison of the sex ratios in the unweighted and the weighted data frames:
+prop.table(table(Data$Gender))
+prop.table(svytable(~Gender, design = Data.w))
+
+# Run this to see how it works
+table(Data$Gender)
+svytable(~Gender, design = Data.w)
+
+# Take my interested variable 'State' as an example, the difference between the unweighted and weighted ratio is really small
+prop.table(table(Data$State)) - prop.table(svytable(~State, design = Data.w))
+
+# Ultimately, the difference for each income level between unweighted and weighted is small too
+prop.table(table(Data$Income)) - prop.table(svytable(~Income, design = Data.w))
+
+```
 
 ```{r, echo = FALSE}
 #add in weights...example code from previous project:
+require(survey)
 
 df1<-svrepdesign(variables=pus_new[,1:13], 
 repweights=pus_new[,14:93], type="BRR",combined.weights=TRUE,
@@ -110,7 +134,7 @@ svymean(~ WAGP,df2, na.rm = T)
 ```{r, echo = FALSE}
 
 #median wage for each occupation by gender (just to acknowledge that there *is* a gender gap)
-
+require(ggplot2)
 Data_sex_occp <- ddply(Data, .(Gender, Occupation), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
 ggplot(Data_sex_occp, aes(x=Occupation, y=MEAN, fill=factor(Gender))) + 
   geom_bar(stat="identity",position="dodge") + 
@@ -133,10 +157,6 @@ Data_women <- filter(Data, Gender == 2)
 #Marital Status - Erica (potentially add in region)
 #Proportion of graduate degrees in each occupation?
 #Region - Vivien
-
-```
-
-```{r, echo = FALSE}
 
 ```
 
@@ -213,4 +233,41 @@ Observations:
 1. Females with Children from 6 to 17 usually tend to have higher average income as the dot has darker color.
 2. Occupation of ENG, MGR and CMM usually tend to have higher salary. On the other hand, female in LGL field always have lower salary
 3. 
+
+```{r}
+# Regional Effect
+# wanna know how to use survey weights
+# calculate median of women in each State and plot in mapview
+# Investigate in Occupation or other vavriables to see why
+
+DW=Data[Data$Gender==2, ]
+
+# boxplot of each state/division/region to see distribution
+require(plotly)
+plot_ly(DW, x = Income, color = Region, type = "box")
+plot_ly(DW, x = Income, color = Division, type = "box")
+boxplot(DW$Income~DW$State) 
+
+# calculate median of women in each Division/Region/State
+library(dplyr)
+DivMedian <- aggregate(Income~Division,Data_women, median)
+RegMedian <- aggregate(Income~Region,Data_women, median)
+StateMedian <- aggregate(Income~State,DW, median)
+
+# Recode State Names
+library(readr)
+statenames <- read_csv("~/Google Drive/Columbia/5243 ADS/Project 1/data/statenames.csv")
+names(StateMedian)[1]<-"code"
+State.Median <- merge(StateMedian, statenames, by="code")
+head(SM)
+
+# plot state income median in mapview
+require(googleVis)
+map<-gvisGeoMap(data=State.Median, locationvar = "name", numvar="Income",options=list(region="US",dataMode="regions",width='800px',heigth='600px',gvis.editor = "Income Median of US States", colors="[0xEFEDF5, 0xA64D79]"))
+plot(map)
+
+
+```
+From the graphs we see that the Northeast region, especially the New England Division, has higher income level than other parts of the States. The next question is why it happens, e.g. particular popular high-income occupations in certain regions?
+
 
