@@ -71,7 +71,7 @@ Data$Region <- recode(Data$State,"c(09,23,25,33,44,59,34,36,42)='Northeast';c(17
 ```
 ```{r}
 # Recode Division
-Data$Division <- recode(Data$State,"c(53,41,6,2,15)='Pacific';c(4,8,16,30,32,35,49,56)='Mountain'; c(19,20,27,29,31,38,46)='West North Central';c(17,18,26,39,55)='East North Central';c(5,22,40,48)='West South Central';c(1,21,28,47)='East South Central';c(34,36,42)='Middle Adlantic';c(10,11,12,13,24,37,45,51,54)='South Atlantic';c(9,23,25,33,44,50)='New England'")
+Data$Division <- recode(Data$State,"c(53,41,6,2,15)='Pacific';c(4,8,16,30,32,35,49,56)='Mountain'; c(19,20,27,29,31,38,46)='West North Central';c(17,18,26,39,55)='East North Central';c(5,22,40,48)='West South Central';c(1,21,28,47)='East South Central';c(34,36,42)='Middle Atlantic';c(10,11,12,13,24,37,45,51,54)='South Atlantic';c(9,23,25,33,44,50)='New England'")
 ```
 
 ```{r}
@@ -98,9 +98,15 @@ summary(Data.w)
 prop.table(table(Data$Gender))
 prop.table(svytable(~Gender, design = Data.w))
 
+# Run this to see how it works
+table(Data$Gender)
+svytable(~Gender, design = Data.w)
+
 # Take my interested variable 'State' as an example, the difference between the unweighted and weighted ratio is really small
 prop.table(table(Data$State)) - prop.table(svytable(~State, design = Data.w))
 
+# Ultimately, the difference for each income level between unweighted and weighted is small too
+prop.table(table(Data$Income)) - prop.table(svytable(~Income, design = Data.w))
 
 ```
 
@@ -230,25 +236,41 @@ Observations:
 
 ```{r}
 # Regional Effect
-# wanna know how to use survey weights (not sure if we have that realted data)
+# wanna know how to use survey weights
 # boxplot of each state/division/region to see distribution
 # calculate median of women in each Division and run significance test?
 # calculate median of women in each State and plot in mapview
 # Investigate in Occupation or other vavriables to see why
-DW=Data[Data$Gender==2,]
 
+DW=Data[Data$Gender==2, ]
+require(plotly)
+plot_ly(DW, x = Income, color = Region, type = "box")
+plot_ly(DW, x = Income, color = Division, type = "box")
 boxplot(DW$Income~DW$State) 
-plot(DW$Income~DW$Division)
-DR=cbind(DW$Income,DW$Division)
+
+
+DR=cbind(DW$Income,DW$State)
 head(DR)
-hist(DR[DR[,2]=="Pacific"][,1])
 
 library(dplyr)
 DivMedian <- aggregate(Income~Division,Data_women, median)
 RegMedian <- aggregate(Income~Region,Data_women, median)
-DivMedian
-RegMedian
+StateMedian <- aggregate(Income~State,Data_women, median)
+StateMedian$State
 
+require(googleVis)
+
+ 
+library(readr)
+statenames <- read_csv("~/Google Drive/Columbia/5243 ADS/Project 1/data/statenames.csv")
+
+StateMedian$State<- recode(StateMedian$State,"statenames$code=statenames$name")
+table(StateMedian$State)
+
+map <- gvisGeoMap(data=StateMedian, locationvar = "State", numvar='Income)',options=list(width='800px',heigth='500px',colors="['0x0000ff', '0xff0000']"))
+plot(map)
+ 
+print(map,file="Map.html")
 
 xtabs(~Gender+Division, data=Data)
 ```
