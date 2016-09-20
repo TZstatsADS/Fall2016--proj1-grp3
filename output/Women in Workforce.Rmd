@@ -27,19 +27,17 @@ ss14pusb=fread("~/Google Drive/Data for R/csv_pus/ss14pusb.csv",head=TRUE,select
 ```{r}
 attach(ss14pusa)
 names(ss14pusa)
-<<<<<<< HEAD
 ss14pusa_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC, PWGTP, AGEP)
 detach(ss14pusa)
 
 attach(ss14pusb)
 ss14pusb_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC, PWGTP, AGEP)
-=======
 ss14pusa_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC, PWGTP)
 detach(ss14pusa)
 
 attach(ss14pusb)
 ss14pusb_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC, PWGTP)
->>>>>>> master
+
 detach(ss14pusb)
 
 Data = rbind(ss14pusa_edit,ss14pusb_edit)
@@ -74,9 +72,17 @@ levels(Data$Occupation) <- c('MGR', 'CMM', 'FIN', 'LGL', 'MED' , 'BUS', 'ENG', '
 ```
 
 ```{r}
+Data$Race <- as.factor(Data$Race)
+levels(Data$Race) <- c('White', 'Black', 'American Indian','Alaska Native','Tribe specified', 'Asian' , 'Native Hawaiian', 'Other','Two or more races')
+```
+
+```{r}
 #Recode Region
 #https://en.wikipedia.org/wiki/List_of_regions_of_the_United_States#/media/File:Census_Regions_and_Division_of_the_United_States.svg
+<<<<<<< HEAD
 
+=======
+>>>>>>> master
 Data$Region <- recode(Data$State,c(09,23,25,33,44,59,34,36,42)='Northeast';c(17,18,26,38,55,19,20,27,29,31,38,46)='Mid West'; c(10,12,13,24,37,45,51,11,54,01,21,28,47,05,22,40,48)='South';c(04,08,16,30,32,35,49,50,02,06,15,41,53)='West'))
 
 require(car)
@@ -84,9 +90,8 @@ Data$Region <- recode(Data$State,"c(09,23,25,33,44,59,34,36,42)='Northeast';c(17
 ```
 ```{r}
 # Recode Division
-Data$Division <- recode(Data$State,"c(53,41,6,2,15)='Pacific';c(4,8,16,30,32,35,49,56)='Mountain'; c(19,20,27,29,31,38,46)='West North Central';c(17,18,26,39,55)='East North Central';c(5,22,40,48)='West South Central';c(1,21,28,47)='East South Central';c(34,36,42)='Middle Adlantic';c(10,11,12,13,24,37,45,51,54)='South Atlantic';c(9,23,25,33,44,50)='New England'")
+Data$Division <- recode(Data$State,"c(53,41,6,2,15)='Pacific';c(4,8,16,30,32,35,49,56)='Mountain'; c(19,20,27,29,31,38,46)='West North Central';c(17,18,26,39,55)='East North Central';c(5,22,40,48)='West South Central';c(1,21,28,47)='East South Central';c(34,36,42)='Middle Atlantic';c(10,11,12,13,24,37,45,51,54)='South Atlantic';c(9,23,25,33,44,50)='New England'")
 ```
->>>>>>> master
 
 ```{r}
 #Recode Education
@@ -103,12 +108,61 @@ library(car)
 Data$Education <- recode(Data$Education,"1:11='~greade8';12:19='grade9~college_nodegree';20:21='associate/bachelor';22:23='master/professional';24='doctor'")
 ```
 
+```{r}
+# On Survey Weights
+# http://tophcito.blogspot.co.at/2014/04/social-science-goes-r-weighted-survey.html We assign everyone that did make it into the sample a weight. So people that turn out too often in the sample receive a weight of less than 1. And those that we were not able to reach enough of are upweighted with a weight larger than 1. Respondents that belong to groups that have been sampled perfectly receive a weight of 1. This solution is called post-stratification, because it computes weights based on group (or stratum) characteristics, like the distribution of age or gender proportions.
+
+require(survey)
+Data.w = svydesign(ids = ~1, data = Data, weights = Data$Weight)
+summary(Data.w)
+
+# comparison of the sex ratios in the unweighted and the weighted data frames:
+prop.table(table(Data$Gender))
+prop.table(svytable(~Gender, design = Data.w))
+
+# Run this to see how it works
+table(Data$Gender)
+svytable(~Gender, design = Data.w)
+
+# Take my interested variable 'State' as an example, the difference between the unweighted and weighted ratio is really small
+prop.table(table(Data$State)) - prop.table(svytable(~State, design = Data.w))
+
+# Ultimately, the difference for each income level between unweighted and weighted is small too
+prop.table(table(Data$Income)) - prop.table(svytable(~Income, design = Data.w))
+
+```
 
 ```{r, echo = FALSE}
+<<<<<<< HEAD
 
 #median wage for each occupation by gender (just to acknowledge that there *is* a gender gap)
 #factor marriage and change labels
 
+=======
+#add in weights...example code from previous project:
+require(survey)
+
+df1<-svrepdesign(variables=pus_new[,1:13], 
+repweights=pus_new[,14:93], type="BRR",combined.weights=TRUE,
+weights=pus_new$PWGTP)
+summary(df1)
+svymean(~ WAGP,df1, na.rm = T)
+
+#If We only want to know the SE and Mean of Statistics Income?
+
+pus_new$FOD1P[pus_new$FOD1P == 3702 | pus_new$FOD1P == 6212 | pus_new$FOD1P == 6202]<-"Statistics"
+df<-subset(pus_new, pus_new$FOD1P=="Statistics")
+df2<-svrepdesign(variables=df[,1:13], 
+repweights=df[,14:93], type="BRR",combined.weights=TRUE,
+weights=df$PWGTP)
+summary(df2)
+svymean(~ WAGP,df2, na.rm = T)
+```
+
+```{r, echo = FALSE}
+
+#median wage for each occupation by gender (just to acknowledge that there *is* a gender gap)
+>>>>>>> master
 Data_sex_occp <- ddply(Data, .(Gender, Occupation), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
 ggplot(Data_sex_occp, aes(x=Occupation, y=MEAN, fill=factor(Gender))) + 
   geom_bar(stat="identity",position="dodge") + 
@@ -121,6 +175,46 @@ ggplot(Data_sex_occp, aes(x=Occupation, y=MEAN, fill=factor(Gender))) +
         panel.background = element_rect(fill = 'white' )) + 
   theme_grey(base_size = 12)
 
+```
+
+Plot broken up by percentage
+```{r}
+#Getting the average for both gender
+Data_occu <- ddply(Data, .(Occupation),summarise,MEAN = weighted.mean(Income, Weight, na.rm = T))
+Data_sex_occp_mean <- data.frame(Data_sex_occp_women$Occupation,Data_sex_occp_men$MEAN,Data_sex_occp_women$MEAN, Data_occu$MEAN)
+colnames(Data_sex_occp_mean) <- c('Occupation','Men','Women','Average')
+
+#Changes all to percentage
+Data_sex_occp_mean_percent <- data.frame(Data_sex_occp_women$Occupation,
+                                         100*(Data_sex_occp_men$MEAN-Data_occu$MEAN)/Data_occu$MEAN,
+                                         100*(Data_sex_occp_women$MEAN-Data_occu$MEAN)/Data_occu$MEAN)
+colnames(Data_sex_occp_mean_percent) <- c('Occupation','Men','Women')
+
+Perc_sex <- plot_ly(Data_sex_occp_mean_percent, x = Women, y = Occupation, name = "Women", mode = "markers", marker = list(color = "red")) %>%
+  add_trace(x = Men, name = "Men", y = Occupation, marker = list(color = "blue"), mode = "markers") %>%
+  layout(
+    title = "Gender earnings disparity by Percentage",
+    xaxis = list(title = "Percent Change (%)"),
+    margin = list(l = 65)
+  )
+Perc_sex
+```
+
+```{r}
+#breakdown women by categories
+#Race
+#Division
+#Children's Age
+#Education
+#Marrige 
+
+Data_Women <- Data[which(Data$Gender ==2),]
+Race_freq <- ftable(Data_Women$Race)
+Race_freq <- as.data.frame(x)
+
+
+plot_ly(Race_freq, labels = Var1, values = Freq, type = "pie",hole = 0.6) %>%
+  layout(title = "Basic Pie Chart using Plotly")
 ```
 
 ```{r, echo = FALSE}
@@ -137,6 +231,7 @@ Data_women <- filter(Data_women, Age > 20 & Age < 66)
 ```
 
 ```{r, echo = FALSE}
+
 #marital status, subset at specific age to control for experience
 Data_wed_occp <- ddply(Data_women, .(Marriage, Occupation, Age), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
 
@@ -272,6 +367,10 @@ summary(lm(MEAN ~ Marriage + Age, data = Data_wed_BUS))
 
 #Computer
 
+=======
+
+#Computer
+
 Women_CMM<-filter(Data_women, Occupation =="CMM")
 Data_wed_CMM <- ddply(Women_CMM, .(Marriage, Age), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
 
@@ -393,11 +492,12 @@ p <- plot_ly(Data_wed_occp, x = Age, y = MEAN,group = Occupation, text = paste("
         mode = "markers",  xaxis = paste0("x", Occupation), symbol = Marriage, jitter = .9)
 
 p<- subplot(p)
-``` 
+``` 
 
->>>>>>> master
+
 
 ```{r, echo = FALSE}
+
 Data_women <- filter(Data, Gender == 2)
 MotherHood=select(Data_women, Income,Children)
 #detach(package:plyr)
@@ -471,4 +571,92 @@ Observations:
 2. Occupation of ENG, MGR and CMM usually tend to have higher salary. On the other hand, female in LGL field always have lower salary
 3. 
 
->>>>>>> master
+
+```{r,echo = FALSE, message=FALSE, warning=FALSE, results='hold'}
+
+# Regional Effect
+# wanna know how to use survey weights
+# calculate median of women in each State and plot in mapview
+# Investigate in Occupation or other vavriables to see why
+
+DW=Data[Data$Gender==2, ]
+
+# boxplot of each state/division/region to see distribution
+require(plotly)
+plot_ly(DW, x = Income, color = Region, type = "box")
+plot_ly(DW, x = Income, color = Division, type = "box")
+boxplot(DW$Income~DW$State) 
+
+# calculate median of women in each Division/Region/State
+
+require(dplyr)
+
+DivMedian <- aggregate(Income~Division,Data_women, median)
+RegMedian <- aggregate(Income~Region,Data_women, median)
+StateMedian <- aggregate(Income~State,DW, median)
+
+# Recode State Names
+require(readr)
+
+statenames <- read_csv("~/Google Drive/Columbia/5243 ADS/Project 1/data/statenames.csv")
+names(StateMedian)[1]<-"code"
+State.Median <- merge(StateMedian, statenames, by="code")
+head(SM)
+
+# plot state income median in mapview
+require(googleVis)
+map<-gvisGeoMap(data=State.Median, locationvar = "name", numvar="Income",options=list(region="US",dataMode="regions",width='800px',heigth='600px',gvis.editor = "Income Median of US States", colors="[0xEFEDF5, 0xA64D79]"))
+plot(map)
+
+
+```
+From the graphs we see that the Northeast region, especially the New England Division, has higher income level than other parts of the States. The next question is why it happens, e.g. particular popular high-income occupations in certain regions?
+
+##Race
+
+The following is a breakdown for women by race. We will be primarly looking into two categories: the race where they excel beyong the male median, and the race where they are far below the women median.
+
+```{r}
+library(plotly)
+require(plotly)
+
+Data_sex_occp_race <- ddply(Data, .(Gender, Occupation, Race), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
+
+Data_sex_occp_race_women <- Data_sex_occp_race[which(Data_sex_occp_race$Gender == 2),]
+
+Data_sex_occp_men <- Data_sex_occp[which(Data_sex_occp$Gender == 1),]
+Data_sex_occp_women <- Data_sex_occp[which(Data_sex_occp$Gender == 2),]
+
+```
+
+
+```{r}
+#Comparing with Histograms
+DSOR_W <- data.frame(Data_sex_occp_race[which(Data_sex_occp_race$Gender==2),])
+
+p <- ggplot(DSOR_W, aes(x=Race,y=MEAN, fill=factor(Race))) +
+            geom_bar(position = "dodge",stat="identity")+
+            facet_grid(. ~ Occupation)+
+            geom_hline(aes(yintercept = MEAN),data=Data_sex_occp_women)+
+            labs(title = "Histogram by Race of Females")
+ggplotly(p)
+```
+
+```{r}
+x <- ftable(Data_Women$Race,Data_Women$Occupation)
+x <- as.data.frame(x)
+x <- x[-31,] #frequency of zero
+
+DSOR_W_Freq <- data.frame(DSOR_W,x$Freq)
+
+Base <- ggplot(DSOR_W_Freq, aes(x=Race,y=MEAN),colour = factor(DSOR_W_Freq$Race)) +
+            facet_grid(. ~ Occupation)+
+            geom_point(aes(size = DSOR_W_Freq$x.Freq,color = factor(DSOR_W_Freq$Race)))+
+            labs(title = "Histogram by Race of Females using Size")+
+            geom_hline(aes(yintercept = MEAN),colour="deeppink1",data=Data_sex_occp_women)+
+            geom_hline(aes(yintercept = MEAN),colour="blue",data=Data_sex_occp_men)+
+            geom_hline(aes(yintercept = MEAN),colour="green",data=Data_occu)
+ggplotly(Base)
+
+#breakdown by race of women in the workforce 
+```
