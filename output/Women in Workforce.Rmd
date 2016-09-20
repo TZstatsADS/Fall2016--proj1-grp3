@@ -90,7 +90,7 @@ Data$Division <- recode(Data$State,"c(53,41,6,2,15)='Pacific';c(4,8,16,30,32,35,
 
 ```{r}
 #Recode Education
-Data$Education <- recode(Data$Education,"c(01,02,03,04,05,06,07,08,09,10,11)='~greade8';c(12,13,14,15,16,17,18,19)='grade9~college_nodegree';c(20,21)='associate/bachelor';c(22,23)='master/professional';c(24)='doctor')
+Data$Education <- recode(Data$Education,"c(01,02,03,04,05,06,07,08,09,10,11)='~greade8';c(12,13,14,15,16,17,18,19)='grade9~college_nodegree';c(20,21)='associate/bachelor';c(22,23)='master/professional';c(24)='doctor')")
 
 #Recode Marriage
 Data$Marriage <- as.factor(Data$Marriage)
@@ -305,12 +305,6 @@ grid_plot(lapply(split(Data_wed_occp, as.factor(Data_wed_occp$Occupation)), func
     hover = list(Marriage, Age))
 }), nrow = 2, same_axes = TRUE)
 
-
-
-ggplot(Data_wed_occp,aes(x = factor(Occupation), fill = factor(Marriage), 
-                             y = MEAN)) +
- geom_bar(stat = "identity")  +
-   geom_text(position = "stack",aes(y = MEAN, label = Marriage), size = 2, check_overlap = TRUE)
 
 
 require(plotly)
