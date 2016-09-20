@@ -11,20 +11,22 @@ ss14pusb = read.csv(file.choose(),header=TRUE)
 #Libraries
 require(plyr)
 require(dplyr)
+require(rbokeh)
+require(ggplot2)
 ```
 
 ```{r}
 attach(ss14pusa)
 names(ss14pusa)
-ss14pusa_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, NOC, PWGTP)
+ss14pusa_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC, PWGTP, AGEP)
 detach(ss14pusa)
 
 attach(ss14pusb)
-ss14pusb_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, NOC, PWGTP)
+ss14pusb_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC, PWGTP, AGEP)
 detach(ss14pusb)
 
 Data = rbind(ss14pusa_edit,ss14pusb_edit)
-colnames(Data) <- c("Gender","Occupation", "Work_hours", "Marriage", "Income", "Education" ,"Parental_Occupation", "Race", "State", "Children", "Weight")
+colnames(Data) <- c("Gender","Occupation", "Work_hours", "Marriage", "Income", "Education" ,"Parental_Occupation", "Race", "State", "Children", "Weight", "Age")
 
 
 write.csv(Data, file = "Data.csv",row.names=TRUE)
@@ -50,11 +52,14 @@ levels(Data$Occupation) <- c('MGR', 'CMM', 'FIN', 'LGL', 'MED' , 'BUS', 'ENG', '
 
 #Recode Region
 #https://en.wikipedia.org/wiki/List_of_regions_of_the_United_States#/media/File:Census_Regions_and_Division_of_the_United_States.svg
-Data$Region <- recode(Data$State,"c(09,23,25,33,44,59,34,36,42)='Northeast';c(17,18,26,38,55,19,20,27,29,31,38,46)='Mid West'; c(10,12,13,24,37,45,51,11,54,01,21,28,47,05,22,40,48)='South';c(04,08,16,30,32,35,49,50,02,06,15,41,53)='West'))
+Data$Region <- recode(Data$State,c(09,23,25,33,44,59,34,36,42)='Northeast';c(17,18,26,38,55,19,20,27,29,31,38,46)='Mid West'; c(10,12,13,24,37,45,51,11,54,01,21,28,47,05,22,40,48)='South';c(04,08,16,30,32,35,49,50,02,06,15,41,53)='West'))
 
 #Recode Education
 Data$Education <- recode(Data$Education,"c(01,02,03,04,05,06,07,08,09,10,11)='~greade8';c(12,13,14,15,16,17,18,19)='grade9~college_nodegree';c(20,21)='associate/bachelor';c(22,23)='master/professional';c(24)='doctor')
 
+#Recode Marriage
+Data$Marriage <- as.factor(Data$Marriage)
+levels(Data$Marriage) <- c("Married", "Widowed", "Divorced", "Seperated", "Never Married")
 ```
 
 ```{r, echo = FALSE}
@@ -80,6 +85,8 @@ svymean(~ WAGP,df2, na.rm = T)
 ```{r, echo = FALSE}
 
 #median wage for each occupation by gender (just to acknowledge that there *is* a gender gap)
+#factor marriage and change labels
+
 
 Data_sex_occp <- ddply(Data, .(Gender, Occupation), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
 ggplot(Data_sex_occp, aes(x=Occupation, y=MEAN, fill=factor(Gender))) + 
@@ -98,6 +105,8 @@ ggplot(Data_sex_occp, aes(x=Occupation, y=MEAN, fill=factor(Gender))) +
 ```{r, echo = FALSE}
 #subset on women, explore groups of women
 Data_women <- filter(Data, Gender == 2)
+Data_women <- filter(Data_women, Age > 20 & Age < 66)
+
 #Race - Catherine
 #Motherhood - 
 #Marital Status - Erica (potentially add in region)
@@ -107,5 +116,164 @@ Data_women <- filter(Data, Gender == 2)
 ```
 
 ```{r, echo = FALSE}
+#marital status, subset at specific age to control for experience
+Women_40 <- subset(Data_women, Data_women$Age == 40)
+Data_women$Agegroup <- cut(as.numeric(Data_women$Age), breaks = c(20,25,30,35,40,45,50,55,60,65))
 
+Data_wed_occp <- ddply(Data_women, .(Marriage, Occupation, Age), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
+
+plot(Data_wed_occp$Age, Data_wed_occp$MEAN)
+
+summary(lm(MEAN ~ Marriage + Age + I(Age^2)) , data = Data_wed_occp))
+
+ggplot(Data_wed_occp,aes(y = MEAN, x =Age,colour=Marriage,shape=Marriage)) +
+geom_point() + geom_smooth(method="loess", fill=NA) + facet_wrap(~Occupation, scales= "free")
+
+
+Women_FIN<-filter(Data_women, Occupation =="FIN")
+Data_wed_FIN <- ddply(Women_FIN, .(Marriage, Age), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
+
+ggplot(Data_wed_FIN,aes(y = MEAN, x =Age,colour=Marriage,shape=Marriage)) +
+geom_point() + geom_smooth(method="loess", fill=NA)
+
+figure(width = NULL, height = NULL) %>%
+  ly_points(Age, MEAN, data = Data_wed_FIN,
+    color = Marriage,
+    hover = list(Marriage, Age))
+
+summary(lm(MEAN ~ Marriage + Age + I(Age^2), data = Data_wed_FIN))
+
+Women_ENG<-filter(Data_women, Occupation =="ENG")
+Data_wed_ENG <- ddply(Women_ENG, .(Marriage, Age), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
+
+ggplot(Data_wed_ENG,aes(y = MEAN, x =Age,colour=Marriage,shape=Marriage)) +
+geom_point() + geom_smooth(method="loess", fill=NA)
+
+eng <-figure(width = NULL, height = NULL) %>%
+  ly_lines(Agegroup, MEAN, data = Data_wed_ENG,
+    color = Marriage, glyph = as.factor(Age),
+    hover = list(Marriage, Age))
+
+eng
+
+lm1 <- lm(MEAN ~ Marriage + Age + I(Age^2), data = Data_wed_ENG)
+summary(lm1)
+
+#medical field
+
+Women_MED<-filter(Data_women, Occupation =="MED")
+Data_wed_MED <- ddply(Women_MED, .(Marriage, Age), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
+
+ggplot(Data_wed_MED,aes(y = MEAN, x =Age,colour=Marriage,shape=Marriage)) +
+geom_point() + geom_smooth(method="loess", fill=NA)
+
+med <- figure(width = NULL, height = NULL) %>%
+  ly_points(Age, MEAN, data = Data_wed_MED,
+    color = Marriage, glyph = as.factor(Marriage),
+    hover = list(Marriage, Age))
+med
+
+summary(lm(MEAN ~ Marriage + Age, data = Data_wed_MED))
+
+#scientist
+
+Women_SCI<-filter(Data_women, Occupation =="SCI")
+Data_wed_SCI <- ddply(Women_SCI, .(Marriage, Age), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
+
+ggplot(Data_wed_SCI,aes(y = MEAN, x =Age,colour=Marriage,shape=Marriage)) +
+geom_point() + geom_smooth(method="loess", fill=NA)
+
+sci <- figure(width = NULL, height = NULL) %>%
+  ly_points(Age, MEAN, data = Data_wed_SCI,
+    color = Marriage, glyph = as.factor(Marriage),
+    hover = list(Marriage, Age))
+sci
+
+summary(lm(MEAN ~ Marriage + Age, data = Data_wed_SCI))
+
+#Managers
+Women_MGR<-filter(Data_women, Occupation =="MGR")
+Data_wed_MGR <- ddply(Women_MGR, .(Marriage, Age), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
+
+ggplot(Data_wed_MGR,aes(y = MEAN, x =Age,colour=Marriage,shape=Marriage)) +
+geom_point() + geom_smooth(method="loess", fill=NA)
+
+mgr <- figure(width = NULL, height = NULL) %>%
+  ly_points(Age, MEAN, data = Data_wed_MGR,
+    color = Marriage, glyph = as.factor(Marriage),
+    hover = list(Marriage, Age))
+mgr
+
+#Lawyers
+
+Women_LGL<-filter(Data_women, Occupation =="LGL")
+Data_wed_LGL <- ddply(Women_LGL, .(Marriage, Age), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
+
+ggplot(Data_wed_LGL,aes(y = MEAN, x =Age,colour=Marriage,shape=Marriage)) +
+geom_point() + geom_smooth(method="loess", fill=NA)
+
+lgl <- figure(width = NULL, height = NULL) %>%
+  ly_points(Age, MEAN, data = Data_wed_LGL,
+    color = Marriage, glyph = as.factor(Marriage),
+    hover = list(Marriage, Age))
+lgl
+
+summary(lm(MEAN ~ Marriage + Age, data = Data_wed_LGL))
+
+
+#Business
+
+Women_BUS<-filter(Data_women, Occupation =="BUS")
+Data_wed_BUS <- ddply(Women_BUS, .(Marriage, Age), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
+
+ggplot(Data_wed_BUS,aes(y = MEAN, x =Age,colour=Marriage,shape=Marriage)) +
+geom_point() + geom_smooth(method="loess", fill=NA)
+
+bus <- figure(width = NULL, height = NULL) %>%
+  ly_points(Age, MEAN, data = Data_wed_BUS,
+    color = Marriage,
+    hover = list(Marriage, Age))
+bus
+
+summary(lm(MEAN ~ Marriage + Age, data = Data_wed_BUS))
+
+#Computer
+
+Women_CMM<-filter(Data_women, Occupation =="CMM")
+Data_wed_CMM <- ddply(Women_CMM, .(Marriage, Age), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
+
+ggplot(Data_wed_CMM,aes(y = MEAN, x =Age,colour=Marriage,shape=Marriage)) +
+geom_point() + geom_smooth(method="loess", fill=NA)
+
+cmm <- figure(width = NULL, height = NULL) %>%
+  ly_points(Age, MEAN, data = Data_wed_CMM,
+    color = Marriage,
+    hover = list(Marriage, Age))
+
+cmm 
+
+summary(lm(MEAN ~ Marriage + Age, data = Data_wed_CMM))
+
+bounds <- range(c(Data_wed_occp$Marriage, Data_wed_occp$MEAN ))
+
+grid_plot(lapply(split(Data_wed_occp, as.factor(Data_wed_occp$Occupation)), function(d) {
+  figure(width = 300, height = 350) %>%
+    ly_points(Age, MEAN, data = Data_wed_occp,
+    color = Marriage,
+    hover = list(Marriage, Age))
+}), nrow = 2, same_axes = TRUE)
+
+
+
+ggplot(Data_wed_occp,aes(x = factor(Occupation), fill = factor(Marriage), 
+                             y = MEAN)) +
+ geom_bar(stat = "identity")  +
+   geom_text(position = "stack",aes(y = MEAN, label = Marriage), size = 2, check_overlap = TRUE)
+
+
+require(plotly)
+p <- plot_ly(Data_wed_occp, x = Age, y = MEAN,group = Occupation, text = paste("Clarity: ", Age),
+        mode = "markers",  xaxis = paste0("x", Occupation), symbol = Marriage, jitter = .9)
+
+p<- subplot(p)
 ```
