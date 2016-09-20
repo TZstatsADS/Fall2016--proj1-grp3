@@ -166,6 +166,46 @@ ggplot(Data_sex_occp, aes(x=Occupation, y=MEAN, fill=factor(Gender))) +
 
 ```
 
+Plot broken up by percentage
+```{r}
+#Getting the average for both gender
+Data_occu <- ddply(Data, .(Occupation),summarise,MEAN = weighted.mean(Income, Weight, na.rm = T))
+Data_sex_occp_mean <- data.frame(Data_sex_occp_women$Occupation,Data_sex_occp_men$MEAN,Data_sex_occp_women$MEAN, Data_occu$MEAN)
+colnames(Data_sex_occp_mean) <- c('Occupation','Men','Women','Average')
+
+#Changes all to percentage
+Data_sex_occp_mean_percent <- data.frame(Data_sex_occp_women$Occupation,
+                                         100*(Data_sex_occp_men$MEAN-Data_occu$MEAN)/Data_occu$MEAN,
+                                         100*(Data_sex_occp_women$MEAN-Data_occu$MEAN)/Data_occu$MEAN)
+colnames(Data_sex_occp_mean_percent) <- c('Occupation','Men','Women')
+
+Perc_sex <- plot_ly(Data_sex_occp_mean_percent, x = Women, y = Occupation, name = "Women", mode = "markers", marker = list(color = "red")) %>%
+  add_trace(x = Men, name = "Men", y = Occupation, marker = list(color = "blue"), mode = "markers") %>%
+  layout(
+    title = "Gender earnings disparity by Percentage",
+    xaxis = list(title = "Percent Change (%)"),
+    margin = list(l = 65)
+  )
+Perc_sex
+```
+
+```{r}
+#breakdown women by categories
+#Race
+#Division
+#Children's Age
+#Education
+#Marrige 
+
+Data_Women <- Data[which(Data$Gender ==2),]
+Race_freq <- ftable(Data_Women$Race)
+Race_freq <- as.data.frame(x)
+
+
+plot_ly(Race_freq, labels = Var1, values = Freq, type = "pie",hole = 0.6) %>%
+  layout(title = "Basic Pie Chart using Plotly")
+```
+
 ```{r, echo = FALSE}
 #subset on women, explore groups of women
 Data_women <- filter(Data, Gender == 2)
@@ -549,3 +589,51 @@ plot(map)
 ```
 From the graphs we see that the Northeast region, especially the New England Division, has higher income level than other parts of the States. The next question is why it happens, e.g. particular popular high-income occupations in certain regions?
 
+##Race
+
+The following is a breakdown for women by race. We will be primarly looking into two categories: the race where they excel beyong the male median, and the race where they are far below the women median.
+
+```{r}
+library(plotly)
+require(plotly)
+
+Data_sex_occp_race <- ddply(Data, .(Gender, Occupation, Race), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
+
+Data_sex_occp_race_women <- Data_sex_occp_race[which(Data_sex_occp_race$Gender == 2),]
+
+Data_sex_occp_men <- Data_sex_occp[which(Data_sex_occp$Gender == 1),]
+Data_sex_occp_women <- Data_sex_occp[which(Data_sex_occp$Gender == 2),]
+
+```
+
+
+```{r}
+#Comparing with Histograms
+DSOR_W <- data.frame(Data_sex_occp_race[which(Data_sex_occp_race$Gender==2),])
+
+p <- ggplot(DSOR_W, aes(x=Race,y=MEAN, fill=factor(Race))) +
+            geom_bar(position = "dodge",stat="identity")+
+            facet_grid(. ~ Occupation)+
+            geom_hline(aes(yintercept = MEAN),data=Data_sex_occp_women)+
+            labs(title = "Histogram by Race of Females")
+ggplotly(p)
+```
+
+```{r}
+x <- ftable(Data_Women$Race,Data_Women$Occupation)
+x <- as.data.frame(x)
+x <- x[-31,] #frequency of zero
+
+DSOR_W_Freq <- data.frame(DSOR_W,x$Freq)
+
+Base <- ggplot(DSOR_W_Freq, aes(x=Race,y=MEAN),colour = factor(DSOR_W_Freq$Race)) +
+            facet_grid(. ~ Occupation)+
+            geom_point(aes(size = DSOR_W_Freq$x.Freq,color = factor(DSOR_W_Freq$Race)))+
+            labs(title = "Histogram by Race of Females using Size")+
+            geom_hline(aes(yintercept = MEAN),colour="deeppink1",data=Data_sex_occp_women)+
+            geom_hline(aes(yintercept = MEAN),colour="blue",data=Data_sex_occp_men)+
+            geom_hline(aes(yintercept = MEAN),colour="green",data=Data_occu)
+ggplotly(Base)
+
+#breakdown by race of women in the workforce 
+```
