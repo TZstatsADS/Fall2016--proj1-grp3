@@ -69,67 +69,47 @@ Data$Region <- recode(Data$State,"c(09,23,25,33,44,59,34,36,42)='Northeast';c(17
 
 Hayoung's part - explore education factor
 ```{r}
-#Recode Education
+#Recode Education : used number as it is order statistics
 library(car)
-Data$Education <- recode(Data$Education,"1:11='~grade8';12:19='grade9~college_nodegree';20:21='associate/bachelor';22:23='master/professional';24='doctor'")
-```
-```{r}
-#Recode Gender
-Data$Gender <- recode(Data$Gender,"1='Male';2='Female'")
-```
+Data$Education <- recode(Data$Education,"1:11='1';12:19='2';20:21='3';22:23='4';24='5'")
 
-Q. What is the median income?
-```{r}
-median_income<-median(Data$Income)
-median_income 
-```
-* median income of working class(male+female) is $31000
+#Calculate weighted median to split income below/above
+library(survey)
+Data_w<-svydesign(id = ~1, weights = ~Data$Weight, data = Data)
+svyquantile(~Data$Income, Data_w, c(.25,.5,.75))
+##Median income=$30000
 
-Q. below median vs.above median percentage of each sex?
-```{r}
-Data$Income_median<-ifelse(Data$Income>=median_income,"2.above","1.below")
-prop.table(table(Data$Income_median,Data$Gender),2)
-barplot(prop.table(table(Data$Income_median,Data$Gender),2),legend.text=TRUE,horiz=TRUE)
-```
-* below median percentage of female (57% of female) >> below median percentage of male (42% of male)
+#split income below/above
+Data$Income_m<-ifelse(Data$Income>=30000,"2.above","1.below")
 
-Q. below income educational attainment vs. above income educational attainment
-```{r}
-Data$Education=factor(Data$Education,c("~grade8","grade9~college_nodegree","associate/bachelor","master/professional","doctor"))
-prop.table(table(Data$Income_median,Data$Education),2)
-barplot(prop.table(table(Data$Income_median,Data$Education),2),legend.text=TRUE,horiz=TRUE)
-```
-* with bachelor's degree at least, more than half are "above group" / without degrees, more than half are "below group"
+#get the data frame needed: education, race effect on income(below/above)
+names(Data)
+Data_women<-subset(Data,Gender=='2')
+attach(Data_women)
+Data_women<-data.frame(Education,Race,Income_m,Weight)
+detach(Data_women)
 
-Q. Devide by gender
-```{r}
-table1<-prop.table(xtabs(~Data$Income_median+Data$Education+Data$Gender),c(1,3))
-#plot seperately
-Data_women<-subset(Data,Gender=='Female')
-Data_men<-subset(Data,Gender=='Male')
-par(mfrow=c(1,2))
-#female
-barplot(prop.table(table(Data_women$Income_median,Data_women$Education),2),legend.text=TRUE,horiz=TRUE)
-#male
-barplot(prop.table(table(Data_men$Income_median,Data_men$Education),2),legend.text=TRUE,horiz=TRUE)
-```
-* at each educational attainment, female's below portion is higher than male
+#get the summary table-education
+Data_women_w<-svydesign(id = ~1, weights = ~Data_women$Weight, data = Data_women)
+t1<-prop.table(svytable(~Income_m+Education, Data_women_w),2)
+barplot(t1, main = "Below/Above median income women by Educational attainment",col = c("mistyrose", "lavender"),
+xlab = "Educational attainment", names = c("~grade8", "grade9~nodegree","associate/bachelor","professional/master","doctor"), 
+ylab = "proportion", legend = c("Below median income", "Above median income"), 
+args.legend = list(title = "Educational attainment", x = "topright", cex = 1), ylim = c(0, 1.5))
+##Below percentage decreases at higher educational attainment
+##Without dgree more than half are below median income
 
-Q. Education effect on income
-```{r}
-boxplot(Income~Education, data=Data[,], main=toupper("Income by Educational attainment"), font.main=3, cex.main=1.2, xlab="Educational attainment", ylab="Income", font.lab=1, col="darkgreen")
+fit_edu<-svyglm(factor(Income_m) ~ factor(Education), design = Data_women_w,family=binomial)
+summary(fit_edu)
+##every factor is significant - interpretation on logit scale
+##Education2, versus Education1(~grade8:baseline) multiplies the odds of being above $30000 group by exp(1.03)
+##???at higher educational attainment, the chance of being ¡°above $30000¡± group increases
+##gap between 2-3 is the largest, college degree is important to be in above $30000 group!
+##I would categorize "women without college degree" as vulnerable women
 ```
-* Educational attainment does affect the income (median increases at higher attainment)
-
-Q.Devide by gender: Does Educational attainment affect female more than male?
-```{r}
-library(ggplot2)
-boxplot_data <- data.frame(Data$Gender,Data$Education,Data$Income)
-ggplot(data = boxplot_data, aes(x=Data$Education, y=Data$Income)) + geom_boxplot(aes(fill=Data$Gender))
-```
-* Educational attainment does affect the female's income, but male's as well
 
 ```{r, echo = FALSE}
+
 #add in weights...example code from previous project:
 
 df1<-svrepdesign(variables=pus_new[,1:13], 
