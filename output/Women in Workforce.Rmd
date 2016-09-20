@@ -72,6 +72,11 @@ levels(Data$Occupation) <- c('MGR', 'CMM', 'FIN', 'LGL', 'MED' , 'BUS', 'ENG', '
 ```
 
 ```{r}
+Data$Race <- as.factor(Data$Race)
+levels(Data$Race) <- c('White', 'Black', 'American Indian','Alaska Native','Tribe specified', 'Asian' , 'Native Hawaiian', 'Other','Two or more races')
+```
+
+```{r}
 #Recode Region
 #https://en.wikipedia.org/wiki/List_of_regions_of_the_United_States#/media/File:Census_Regions_and_Division_of_the_United_States.svg
 Data$Region <- recode(Data$State,c(09,23,25,33,44,59,34,36,42)='Northeast';c(17,18,26,38,55,19,20,27,29,31,38,46)='Mid West'; c(10,12,13,24,37,45,51,11,54,01,21,28,47,05,22,40,48)='South';c(04,08,16,30,32,35,49,50,02,06,15,41,53)='West'))
