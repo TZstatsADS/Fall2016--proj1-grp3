@@ -262,35 +262,6 @@ Observations:
 
 3. Interestingly, for most occupations where marital status is significant, women in their profession who have never been married earn more than married women, whereas widowed and seperated women earn significantly less. Perhaps widowed or seperated women are more likely to have children than never married women, and thus must shoulder more responsibilities outside of work.
  
-#Marital statuses of mothers
-
-```{r, echo = FALSE}
-MotherMaritalOccupation=select(Data_women, Income,Children,Occupation, Marriage, Age)
-MotherMaritalOccupation <- na.omit(MotherMaritalOccupation)
-MotherMaritalOccupation$Children <- ifelse(MotherMaritalOccupation$Children == 4, 0, 1)
-#detach(package:plyr)
-GroupedMotherMaritalOccupation <-
-  MotherMaritalOccupation %>%
-  na.omit() %>%
-  group_by(Children,Occupation, Marriage, Age) %>% 
-  summarize(
-    AvgIncome = mean(Income),
-    count=n()
-  ) 
-
-GroupedMotherMarital <-
-  MotherMaritalOccupation %>%
-  na.omit() %>%
-  group_by(Children, Marriage, Age) %>% 
-  summarize(
-    AvgIncome = mean(Income),
-    count=n()
-  ) 
-
-
-ggplot(GroupedMotherMarital,aes(y = AvgIncome, x =Age,colour=as.factor(Children))) +
-geom_point() + geom_smooth(method="loess", fill=NA) + facet_wrap(~Marriage, scales= "free")
-```
 
 #Motherhood
 
@@ -397,6 +368,35 @@ GroupedMotherOccupation <-
   ) 
 
 ggplot(GroupedMotherOccupation,aes(x=as.factor(Children)))+geom_point(aes(y=Occupation,size=count,colour=AvgIncome))+geom_text(aes(label = round(AvgIncome),y=Occupation,opacity=0),hjust=0, vjust=1,size=2.5) +scale_colour_gradient(low="white",high="red") +scale_x_discrete(labels=c("Children under 6", "Children from 6 to 17", "Children #under 6 and above 6", "No Children"))
+```
+#Marital statuses of mothers
+
+```{r, echo = FALSE}
+MotherMaritalOccupation=select(Data_women, Income,Children,Occupation, Marriage, Age)
+MotherMaritalOccupation <- na.omit(MotherMaritalOccupation)
+MotherMaritalOccupation$Children <- ifelse(MotherMaritalOccupation$Children == 4, 0, 1)
+#detach(package:plyr)
+GroupedMotherMaritalOccupation <-
+  MotherMaritalOccupation %>%
+  na.omit() %>%
+  group_by(Children,Occupation, Marriage, Age) %>% 
+  summarize(
+    AvgIncome = mean(Income),
+    count=n()
+  ) 
+
+GroupedMotherMarital <-
+  MotherMaritalOccupation %>%
+  na.omit() %>%
+  group_by(Children, Marriage, Age) %>% 
+  summarize(
+    AvgIncome = mean(Income),
+    count=n()
+  ) 
+
+
+ggplot(GroupedMotherMarital,aes(y = AvgIncome, x =Age,colour=as.factor(Children))) +
+geom_point() + geom_smooth(method="loess", fill=NA) + facet_wrap(~Marriage, scales= "free")
 ```
 
 #Education
