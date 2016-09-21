@@ -178,8 +178,21 @@ Oberservations:
 
 In this report, we will investigate 5 probable causes to determine which groups of women will most likely succeed or fail. These categories are: Marriage Status, Motherhood, Location, Race, and Education.  
 
-```{r, echo = FALSE}
+#Motherhood
+
+After investigating how marriage status affect women's income, we looked into the presence and age of children owned by the women to determine how it might correlate to women's income. We expect women with Children under 6 may have less working hours and thus lower income (reasoning: when a child is young the women of the house is more likely to stay home with their children. As we see the children grow, we expect a trend for women to earn the higher.) Furthermore, we may also want to figure out how occupation and age for women with children affect their income.  
+
+
+The breakdown of motherhood is
++ Children 
++ sub-item 3
+
+At first, we want to have a glance at the income level of the different groups of females. Basically females are divided into four categories regarding the presence and age of Children: Females with Children under 6, Females with Children from 6 to 17, Females with Children under 6 and above 6, Females with No Children. Thus we simply creat a bar chart to illustrate the income difference.
+```{r}
 Data_women <- filter(Data, Gender == 2)
+Data_women$Agegroup <- cut(as.numeric(Data_women$Age), breaks = c(20,25,30,35,40,45,50,55,60,65))
+Data_women <- filter(Data_women, Age > 20 & Age < 66)
+
 MotherHood=select(Data_women, Income,Children)
 #detach(package:plyr)
 GroupedMotherHood <-
@@ -190,16 +203,72 @@ GroupedMotherHood <-
     AvgIncome = mean(Income)
   ) 
 
-### Bar Chart
+
+### Line Chart with regard to Age
+
+GroupedMotherHood$Children<-factor(GroupedMotherHood$Children, levels = c("1","2","3","4"), c('Children under 6','Children from 6 to 17','Children under 6 and above 6','No Children'))
+
+
+  
 ggplot(GroupedMotherHood, aes(x=Children, y=AvgIncome)) + 
-  geom_bar(colour="black", fill="#DD8888", width=.5, stat="identity") + 
+  geom_bar(width=.5, stat="identity")+
   guides(fill=FALSE) +
-  xlab("Children") + ylab("Mean Income") +
+  xlab("MotherHood") + ylab("Mean Income") +
   coord_cartesian(ylim = c(50000,70000)) +
-  #scale_y_continuous(limits = c(40000,70000),oob = rescale_none) +
   ggtitle("Income for Motherhood")
+
+
 ```
-#Write why
+
+Observations:
+The bar chart verifies our guess. Women with children 6 to 17 has obviously higher Average Income as they have more working experience and do not need to spend too much time to take care of young children. On the other hand, women with Children of both ages have slightly lower income, which is also reasonable as they may not have too much time in work.
+
+
+Next, in order to better understand why women with children 6 to 17 have higher income and whether it has anything to do with age, we are going to study how the income change for different groups of women through out age. Basically we try to analyze by line chart to see the income trend and compare. 
+```{r}
+
+
+MotherHood=select(Data_women, Income,Children,Agegroup)
+#detach(package:plyr)
+GroupedMotherHood <-
+  MotherHood %>%
+  na.omit() %>%
+  group_by(Children,Agegroup) %>% 
+  summarize(
+    AvgIncome = mean(Income)
+  ) 
+
+
+### Line Chart with regard to Age
+
+GroupedMotherHood$Children<-factor(GroupedMotherHood$Children, levels = c("1","2","3","4"), c('Children under 6','Children from 6 to 17','Children under 6 and above 6','No Children'))
+
+
+  
+#ggplot(GroupedMotherHood, aes(x=Agegroup, y=AvgIncome,fill=Children)) + 
+#  geom_bar(width=.5, stat="identity")+
+#  xlab("Age Group") + ylab("Mean Income") +
+#  ggtitle("Income for Motherhood")
+
+
+ggplot(GroupedMotherHood, aes(x=Agegroup, y=AvgIncome,group=Children,colour=Children)) + 
+  geom_line()+
+  geom_point()+
+  #guides(fill=FALSE) +
+  xlab("Age Group") + ylab("Mean Income") +
+  ggtitle("Income for Motherhood")
+
+
+```
+
+
+Observations:
+1. Before 45-50 years old, there is an abvious increasing trend of income basically for all groups. And after that age, average income begins to decrease or stablize.
+2. Surprisingly, for the same age group, women with Children under 6 have higher income. While women with children from 6 and 17 have higher income after 45 years old, which might be the reason this group has higher average income. On the other hand, women with no children doesn't earn less than other groups at younger age groups, but their income become stable and less than others after 40 years old. 
+
+
+Next, we wanted to see how the working hours related to the income of women in different group. Will women with children from 6 to 17 have more working hours and generate higher income? 
+Thus we want to use bubble chart to integrate working hours, average income, the group count in a bubble chart so that all the information can be gained in the same graph. 
 ```{r}
 MotherWorking=select(Data_women, Income,Children,Work_hours)
 #detach(package:plyr)
@@ -212,21 +281,27 @@ GroupedMotherWorking <-
     count=n()
   ) 
 
+GroupedMotherWorking$Children<-factor(GroupedMotherWorking$Children, levels = c("1","2","3","4"),labels= c('Children under 6','Children from 6 to 17','Children under 6 and above 6','No Children'))
+
+library(plotly)
 # note how size is automatically scaled and added as hover text
-plot_ly(GroupedMotherWorking, x = Work_hours, y = AvgIncome,size=sqrt(count), color = Children,text = paste("Count: ", count),opacity=1-Children*0.2,mode = "markers")
 
-#plot_ly(GroupedMotherWorking, x = Work_hours, y = AvgIncome, text = paste("Count: ", #count),mode = "markers", opacity=1-Children*0.2,color = Children)
+plot_ly(GroupedMotherWorking, x = Work_hours, y = AvgIncome,size=sqrt(count), color = Children,mode = "markers",hoverinfo = "text",text = paste("AvgIncome:",AvgIncome,"<br>","Count:",count,"<br>"))
+
+
+
 ```
+
 Observations:
+1. When work_hours smaller than 60Hrs, Avg Income tend to be positively related to work hour, which agrees with our common knowledge. Most women concentrate around 40 working hours.
+2. There are generally more females with no Children in this survey as green circles are generally larger in size. Also it can be observed there are much more women with no children working more than 50 hours compared to other groups. On the other hand, there are basically less women with children from both age groups.
+3. Females with Children from 6 to 17 often have higher avg income. While for the same working hour level, females with no children are frequently have lower average income.
 
-1. When work_hours smaller than 60Hrs, Avg Income tend to be positively related to work hour.
 
-2. There are generally more females with no Children
-
-3. Females with Children from 6 to 17 often has higher avg income
-
+Next we want to investigate whether the income difference among four grouops of female have any relationship to their occupation. Therefore we use this chart to compare the income for four groups of women in different occupations. Basically, darker color represent higher income and larger size indicate larger group size.
 ```{r}
 MotherOccupation=select(Data_women, Income,Children,Occupation)
+
 #detach(package:plyr)
 GroupedMotherOccupation <-
   MotherOccupation %>%
@@ -238,18 +313,16 @@ GroupedMotherOccupation <-
   ) 
 
 
-revalue(GroupedMotherOccupation$Children,c('1'='Children under 6','2'='Children from 6 to 17','3'='Children under 6 and above 6','4'='No Children'))
 
-ggplot(GroupedMotherOccupation,aes(x=Children))+geom_point(aes(y=Occupation,size=count,colour=AvgIncome))+scale_colour_gradient(low="green",high="red")+scale_x_continuous(breaks=1:4, labels=c("Children under 6", "Children from 6 to 17", "Children under 6 and above 6", "No Children")) 
+ggplot(GroupedMotherOccupation,aes(x=as.factor(Children)))+geom_point(aes(y=Occupation,size=count,colour=AvgIncome))+geom_text(aes(label = round(AvgIncome),y=Occupation,opacity=0),hjust=0, vjust=1,size=2.5)+scale_colour_gradient(low="white",high="red")+scale_x_discrete(labels=c("Children under 6", "Children from 6 to 17", "Children #under 6 and above 6", "No Children"))
+#
+
+### change count into color...
+#ggplot(GroupedMotherOccupation,aes(x=Children))+geom_point(aes(y=Occupation,size=AvgIncome,colour#=count))+scale_colour_gradient(low="white",high="red")+scale_x_continuous(breaks=1:4, #labels=c("Children under 6", "Children from 6 to 17", "Children under 6 and above 6", "No #Children")) 
+
 
 #scale_colour_gradientn(colours = terrain.colors(10))
 ```
-Observations:
-
-1. Females with Children from 6 to 17 usually tend to have higher average income as the dot has darker color.
-
-2. Occupation of ENG, MGR and CMM usually tend to have higher salary. On the other hand, female in LGL field always have lower salary
-
 
 #Education
 
