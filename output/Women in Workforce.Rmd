@@ -1,33 +1,27 @@
 ---
 title: "Women in Work Force"
-author: "Kanghui Jiang, Erica Kilbride, Hayoung Kim, Wanyi Zhang, and Catherine Zhao"
 output: html_notebook
 ---
 
-```{r eval=FALSE} 
+```{r} 
 #Importing Data Set
 ss14pusa = read.csv(file.choose(),header=TRUE)  # read csv file
 ss14pusb = read.csv(file.choose(),header=TRUE)
 
 #Libraries
-require(dplyr)
 require(plyr)
 require(dplyr)
-require(rbokeh)
-require(ggplot2)
-require(plotly)
-require(googleVis)
 ```
 
-```{r, echo = FALSE}
+```{r}
 #Importing Data Set in a faster way
 library(data.table)
 variables=c("SEX","OCCP","WKHP","MAR","WAGP","SCHL","ESP","RAC1P","ST","PAOC","PWGTP")
 ss14pusa=fread("C:/Users/user/Desktop/Statistics/3rd semester/ADS/Project1/csv_pus/ss14pusa.csv",head=TRUE,select=variables)
 ss14pusb=fread("C:/Users/user/Desktop/Statistics/3rd semester/ADS/Project1/csv_pus/ss14pusb.csv",head=TRUE,select=variables)
 ```
-The following shows the columns we imported.
-```{r  eval=FALSE}
+
+```{r}
 attach(ss14pusa)
 names(ss14pusa)
 ss14pusa_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC, PWGTP)
@@ -40,14 +34,16 @@ detach(ss14pusb)
 Data = rbind(ss14pusa_edit,ss14pusb_edit)
 colnames(Data) <- c("Gender","Occupation", "Work_hours", "Marriage", "Income", "Education" ,"Parental_Occupation", "Race", "State", "Children", "Weight")
 
-write.csv(Data, file = "Data.csv",row.names=TRUE)
 
+write.csv(Data, file = "Data.csv",row.names=TRUE)
+```
+
+```{r}
 #Delete income=0/NA rows
 row_to_keep=which(Data$Income>0)
 Data=Data[row_to_keep,]
 ```
 
-We renamed and categorized multiple categories for readablilty.
 ```{r, echo = FALSE}
 #recode OCCP
 class(Data$Occupation) <- "numeric"
@@ -65,61 +61,36 @@ Data <- Data[row_to_keep2,]
 Data$Occupation <- as.factor(Data$Occupation)
 
 levels(Data$Occupation) <- c('MGR', 'CMM', 'FIN', 'LGL', 'MED' , 'BUS', 'ENG', 'SCI')
-Data$Race <- as.factor(Data$Race)
-levels(Data$Race) <- c('White', 'Black', 'American Indian','Alaska Native','Tribe specified', 'Asian' , 'Native Hawaiian', 'Other','Two or more races')
 
 #Recode Region
 #https://en.wikipedia.org/wiki/List_of_regions_of_the_United_States#/media/File:Census_Regions_and_Division_of_the_United_States.svg
-Data$Region <- recode(Data$State,c(09,23,25,33,44,59,34,36,42)='Northeast',c(17,18,26,38,55,19,20,27,29,31,38,46)='Mid West', c(10,12,13,24,37,45,51,11,54,01,21,28,47,05,22,40,48)='South',c(04,08,16,30,32,35,49,50,02,06,15,41,53)='West'))
+Data$Region <- recode(Data$State,"c(09,23,25,33,44,59,34,36,42)='Northeast';c(17,18,26,38,55,19,20,27,29,31,38,46)='Mid West'; c(10,12,13,24,37,45,51,11,54,01,21,28,47,05,22,40,48)='South';c(04,08,16,30,32,35,49,50,02,06,15,41,53)='West'))
 
-require(car)
-Data$Region <- recode(Data$State,"c(09,23,25,33,44,59,34,36,42)='Northeast';c(17,18,26,38,55,19,20,27,29,31,38,46,39)='Midwest'; c(10,12,13,24,37,45,51,11,54,01,21,28,47,05,22,40,48)='South';c(04,08,16,30,32,35,49,50,02,06,15,41,53,56)='West';'72'='Puerto Rico'")
-
-# Recode Division
-Data$Division <- recode(Data$State,"c(53,41,6,2,15)='Pacific';c(4,8,16,30,32,35,49,56)='Mountain'; c(19,20,27,29,31,38,46)='West North Central';c(17,18,26,39,55)='East North Central';c(5,22,40,48)='West South Central';c(1,21,28,47)='East South Central';c(34,36,42)='Middle Atlantic';c(10,11,12,13,24,37,45,51,54)='South Atlantic';c(9,23,25,33,44,50)='New England'")
-
-#Recode Marriage
-Data$Marriage <- as.factor(Data$Marriage)
-levels(Data$Marriage) <- c("Married", "Widowed", "Divorced", "Seperated", "Never Married")
-
-# Recode Education
-Data$Education <- recode(Data$Education,"1:11='1';12:19='2';20:21='3';22:23='4';24='5'")
 ```
 
 
-### Using Survey Weights
-We were trying to determine whether or not to use survey weights? Would the data be significantly impacted?
-```{r}
-# On Survey Weights
-# http://tophcito.blogspot.co.at/2014/04/social-science-goes-r-weighted-survey.html We assign everyone that did make it into the sample a weight. So people that turn out too often in the sample receive a weight of less than 1. And those that we were not able to reach enough of are upweighted with a weight larger than 1. Respondents that belong to groups that have been sampled perfectly receive a weight of 1. This solution is called post-stratification, because it computes weights based on group (or stratum) characteristics, like the distribution of age or gender proportions.
 
-require(survey)
-Data.w = svydesign(ids = ~1, data = Data, weights = Data$Weight)
-summary(Data.w)
+```{r, echo = FALSE}
 
-# comparison of the sex ratios in the unweighted and the weighted data frames:
-prop.table(table(Data$Gender))
-prop.table(svytable(~Gender, design = Data.w))
+#add in weights...example code from previous project:
 
-# Run this to see how it works
-table(Data$Gender)
-svytable(~Gender, design = Data.w)
+df1<-svrepdesign(variables=pus_new[,1:13], 
+repweights=pus_new[,14:93], type="BRR",combined.weights=TRUE,
+weights=pus_new$PWGTP)
+summary(df1)
+svymean(~ WAGP,df1, na.rm = T)
 
-# Take my interested variable 'State' as an example, the difference between the unweighted and weighted ratio is really small
-prop.table(table(Data$State)) - prop.table(svytable(~State, design = Data.w))
+#If We only want to know the SE and Mean of Statistics Income?
 
-# Ultimately, the difference for each income level between unweighted and weighted is small too
-prop.table(table(Data$Income)) - prop.table(svytable(~Income, design = Data.w))
-
-#median wage for each occupation by gender (just to acknowledge that there *is* a gender gap)
-#factor marriage and change labels
+pus_new$FOD1P[pus_new$FOD1P == 3702 | pus_new$FOD1P == 6212 | pus_new$FOD1P == 6202]<-"Statistics"
+df<-subset(pus_new, pus_new$FOD1P=="Statistics")
+df2<-svrepdesign(variables=df[,1:13], 
+repweights=df[,14:93], type="BRR",combined.weights=TRUE,
+weights=df$PWGTP)
+summary(df2)
+svymean(~ WAGP,df2, na.rm = T)
 ```
-From our results, the survey weights would be insignificant relative to the data. ...
 
-
-#Where is the gap?
-
-Since we know there is a significant wage gap between different professions, we used occupation as a category for our data. We seperated the occupations by groups. Within each group, we divided the men and women and compared their weighted mean.
 ```{r, echo = FALSE}
 
 #median wage for each occupation by gender (just to acknowledge that there *is* a gender gap)
@@ -135,64 +106,26 @@ ggplot(Data_sex_occp, aes(x=Occupation, y=MEAN, fill=factor(Gender))) +
   theme(axis.text.x = element_text(angle = 30, hjust = 1), 
         panel.background = element_rect(fill = 'white' )) + 
   theme_grey(base_size = 12)
+
 ```
 
-
-From the graph, we see there is a significant difference between men and women over all occupations. To gain a better understanding we graphed them by percentage from the weighted mean of both genders.
-```{r}
-
-Data_sex_occp_race <- ddply(Data, .(Gender, Occupation, Race), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
-
-Data_sex_occp_race_women <- Data_sex_occp_race[which(Data_sex_occp_race$Gender == 2),]
-
-Data_sex_occp_men <- Data_sex_occp[which(Data_sex_occp$Gender == 1),]
-Data_sex_occp_women <- Data_sex_occp[which(Data_sex_occp$Gender == 2),]
-
-
-#Getting the average for both gender
-Data_occu <- ddply(Data, .(Occupation),summarise,MEAN = weighted.mean(Income, Weight, na.rm = T))
-Data_sex_occp_mean <- data.frame(Data_sex_occp_women$Occupation,Data_sex_occp_men$MEAN,Data_sex_occp_women$MEAN, Data_occu$MEAN)
-colnames(Data_sex_occp_mean) <- c('Occupation','Men','Women','Average')
-
-#Changes all to percentage
-Data_sex_occp_mean_percent <- data.frame(Data_sex_occp_women$Occupation,
-                                         100*(Data_sex_occp_men$MEAN-Data_occu$MEAN)/Data_occu$MEAN,
-                                         100*(Data_sex_occp_women$MEAN-Data_occu$MEAN)/Data_occu$MEAN)
-colnames(Data_sex_occp_mean_percent) <- c('Occupation','Men','Women')
-
-Perc_sex <- plot_ly(Data_sex_occp_mean_percent, x = Women, y = Occupation, name = "Women", mode = "markers", marker = list(color = "red")) %>%
-  add_trace(x = Men, name = "Men", y = Occupation, marker = list(color = "blue"), mode = "markers") %>%
-  layout(
-    title = "Gender earnings disparity by Percentage",
-    xaxis = list(title = "Percent Change (%)"),
-    margin = list(l = 65)
-  )
-Perc_sex
-```
-Oberservations:
-
-1. Medical occupations has the largest disperity between men and women
-
-2. Women in legal occupations are the closest to the median 
-
-
-In this report, we will investigate 5 probable causes to determine which groups of women will most likely succeed or fail. These categories are: Marriage Status, Motherhood, Location, Race, and Education.  
-
-#Motherhood
-
-After investigating how marriage status affect women's income, we looked into the presence and age of children owned by the women to determine how it might correlate to women's income. We expect women with Children under 6 may have less working hours and thus lower income (reasoning: when a child is young the women of the house is more likely to stay home with their children. As we see the children grow, we expect a trend for women to earn the higher.) Furthermore, we may also want to figure out how occupation and age for women with children affect their income.  
-
-
-The breakdown of motherhood is
-+ Children 
-+ sub-item 3
-
-At first, we want to have a glance at the income level of the different groups of females. Basically females are divided into four categories regarding the presence and age of Children: Females with Children under 6, Females with Children from 6 to 17, Females with Children under 6 and above 6, Females with No Children. Thus we simply creat a bar chart to illustrate the income difference.
-```{r}
+```{r, echo = FALSE}
+#subset on women, explore groups of women
 Data_women <- filter(Data, Gender == 2)
-Data_women$Agegroup <- cut(as.numeric(Data_women$Age), breaks = c(20,25,30,35,40,45,50,55,60,65))
-Data_women <- filter(Data_women, Age > 20 & Age < 66)
+#Race - Catherine
+#Motherhood - 
+#Marital Status - Erica (potentially add in region)
+#Proportion of graduate degrees in each occupation?
+#Region - Vivien
 
+```
+
+```{r, echo = FALSE}
+
+```
+
+```{r, echo = FALSE}
+Data_women <- filter(Data, Gender == 2)
 MotherHood=select(Data_women, Income,Children)
 #detach(package:plyr)
 GroupedMotherHood <-
@@ -204,71 +137,20 @@ GroupedMotherHood <-
   ) 
 
 
-### Line Chart with regard to Age
-
-GroupedMotherHood$Children<-factor(GroupedMotherHood$Children, levels = c("1","2","3","4"), c('Children under 6','Children from 6 to 17','Children under 6 and above 6','No Children'))
-
-
-  
+### Bar Chart
 ggplot(GroupedMotherHood, aes(x=Children, y=AvgIncome)) + 
-  geom_bar(width=.5, stat="identity")+
+  geom_bar(colour="black", fill="#DD8888", width=.5, stat="identity") + 
   guides(fill=FALSE) +
-  xlab("MotherHood") + ylab("Mean Income") +
+  xlab("Children") + ylab("Mean Income") +
   coord_cartesian(ylim = c(50000,70000)) +
+  #scale_y_continuous(limits = c(40000,70000),oob = rescale_none) +
   ggtitle("Income for Motherhood")
 
 
+
+### 
 ```
 
-Observations:
-The bar chart verifies our guess. Women with children 6 to 17 has obviously higher Average Income as they have more working experience and do not need to spend too much time to take care of young children. On the other hand, women with Children of both ages have slightly lower income, which is also reasonable as they may not have too much time in work.
-
-
-Next, in order to better understand why women with children 6 to 17 have higher income and whether it has anything to do with age, we are going to study how the income change for different groups of women through out age. Basically we try to analyze by line chart to see the income trend and compare. 
-```{r}
-
-
-MotherHood=select(Data_women, Income,Children,Agegroup)
-#detach(package:plyr)
-GroupedMotherHood <-
-  MotherHood %>%
-  na.omit() %>%
-  group_by(Children,Agegroup) %>% 
-  summarize(
-    AvgIncome = mean(Income)
-  ) 
-
-
-### Line Chart with regard to Age
-
-GroupedMotherHood$Children<-factor(GroupedMotherHood$Children, levels = c("1","2","3","4"), c('Children under 6','Children from 6 to 17','Children under 6 and above 6','No Children'))
-
-
-  
-#ggplot(GroupedMotherHood, aes(x=Agegroup, y=AvgIncome,fill=Children)) + 
-#  geom_bar(width=.5, stat="identity")+
-#  xlab("Age Group") + ylab("Mean Income") +
-#  ggtitle("Income for Motherhood")
-
-
-ggplot(GroupedMotherHood, aes(x=Agegroup, y=AvgIncome,group=Children,colour=Children)) + 
-  geom_line()+
-  geom_point()+
-  #guides(fill=FALSE) +
-  xlab("Age Group") + ylab("Mean Income") +
-  ggtitle("Income for Motherhood")
-
-
-```
-
-
-Observations:
-1. Before 45-50 years old, there is an abvious increasing trend of income basically for all groups. And after that age, average income begins to decrease or stablize.
-2. Surprisingly, for the same age group, women with Children under 6 have higher income. While women with children from 6 and 17 have higher income after 45 years old, which might be the reason this group has higher average income. On the other hand, women with no children doesn't earn less than other groups at younger age groups, but their income become stable and less than others after 40 years old. 
-
-
-Next, we wanted to see how the working hours related to the income of women in different group. Will women with children from 6 to 17 have more working hours and generate higher income? 
-Thus we want to use bubble chart to integrate working hours, average income, the group count in a bubble chart so that all the information can be gained in the same graph. 
 ```{r}
 MotherWorking=select(Data_women, Income,Children,Work_hours)
 #detach(package:plyr)
@@ -281,27 +163,19 @@ GroupedMotherWorking <-
     count=n()
   ) 
 
-GroupedMotherWorking$Children<-factor(GroupedMotherWorking$Children, levels = c("1","2","3","4"),labels= c('Children under 6','Children from 6 to 17','Children under 6 and above 6','No Children'))
-
 library(plotly)
 # note how size is automatically scaled and added as hover text
 
-plot_ly(GroupedMotherWorking, x = Work_hours, y = AvgIncome,size=sqrt(count), color = Children,mode = "markers",hoverinfo = "text",text = paste("AvgIncome:",AvgIncome,"<br>","Count:",count,"<br>"))
+plot_ly(GroupedMotherWorking, x = Work_hours, y = AvgIncome,size=sqrt(count), color = Children,text = paste("Count: ", count),opacity=1-Children*0.2,mode = "markers")
 
-
-
+#plot_ly(GroupedMotherWorking, x = Work_hours, y = AvgIncome, text = paste("Count: ", #count),mode = "markers", opacity=1-Children*0.2,color = Children)
 ```
-
 Observations:
-1. When work_hours smaller than 60Hrs, Avg Income tend to be positively related to work hour, which agrees with our common knowledge. Most women concentrate around 40 working hours.
-2. There are generally more females with no Children in this survey as green circles are generally larger in size. Also it can be observed there are much more women with no children working more than 50 hours compared to other groups. On the other hand, there are basically less women with children from both age groups.
-3. Females with Children from 6 to 17 often have higher avg income. While for the same working hour level, females with no children are frequently have lower average income.
-
-
-Next we want to investigate whether the income difference among four grouops of female have any relationship to their occupation. Therefore we use this chart to compare the income for four groups of women in different occupations. Basically, darker color represent higher income and larger size indicate larger group size.
+1. When work_hours smaller than 60Hrs, Avg Income tend to be positively related to work hour.
+2. There are generally more females with no Children
+3. Females with Children from 6 to 17 often has higher avg income
 ```{r}
 MotherOccupation=select(Data_women, Income,Children,Occupation)
-
 #detach(package:plyr)
 GroupedMotherOccupation <-
   MotherOccupation %>%
@@ -313,22 +187,23 @@ GroupedMotherOccupation <-
   ) 
 
 
+revalue(GroupedMotherOccupation$Children,c('1'='Children under 6','2'='Children from 6 to 17','3'='Children under 6 and above 6','4'='No Children'))
 
-ggplot(GroupedMotherOccupation,aes(x=as.factor(Children)))+geom_point(aes(y=Occupation,size=count,colour=AvgIncome))+geom_text(aes(label = round(AvgIncome),y=Occupation,opacity=0),hjust=0, vjust=1,size=2.5)+scale_colour_gradient(low="white",high="red")+scale_x_discrete(labels=c("Children under 6", "Children from 6 to 17", "Children #under 6 and above 6", "No Children"))
-#
-
-### change count into color...
-#ggplot(GroupedMotherOccupation,aes(x=Children))+geom_point(aes(y=Occupation,size=AvgIncome,colour#=count))+scale_colour_gradient(low="white",high="red")+scale_x_continuous(breaks=1:4, #labels=c("Children under 6", "Children from 6 to 17", "Children under 6 and above 6", "No #Children")) 
-
+ggplot(GroupedMotherOccupation,aes(x=Children))+geom_point(aes(y=Occupation,size=count,colour=AvgIncome))+scale_colour_gradient(low="green",high="red")+scale_x_continuous(breaks=1:4, labels=c("Children under 6", "Children from 6 to 17", "Children under 6 and above 6", "No Children")) 
 
 #scale_colour_gradientn(colours = terrain.colors(10))
 ```
+Observations:
+1. Females with Children from 6 to 17 usually tend to have higher average income as the dot has darker color.
+2. Occupation of ENG, MGR and CMM usually tend to have higher salary. On the other hand, female in LGL field always have lower salary
+3. 
 
-#Education
+EXPLORE EDUCATION FACTOR
+
+We expect that educational attainment would affect the women's income. We may want to figure out which degree is the most important factor to earn more than the median income. Furthermore, we will see which occupation has the largest/smallest "below median group" within each educational attainment.
 
 We divided female into 2 groups (>=$60,000 vs <60,000) using weighted median income for working class. ($60,000)
 We will see the proportion of these 2 groups for each educational attainment.
-
 ```{r}
 #Recode Education : used number as it is order statistics
 library(car)
@@ -343,8 +218,6 @@ svyquantile(~Data$Income, Data_w, c(.25,.5,.75))
 #split income below/above
 Data$Income_m<-ifelse(Data$Income>=60000,">=$60,000","<$60,000")
 
-#get the data frame needed: education, race effect on income(below/above)
-names(Data)
 Data_women<-subset(Data,Gender=='2')
 attach(Data_women)
 Data_women<-data.frame(Education,Occupation,Income_m,Weight)
@@ -354,380 +227,85 @@ detach(Data_women)
 #get the summary table-education
 Data_women_w<-svydesign(id = ~1, weights = ~Data_women$Weight, data = Data_women)
 t1<-prop.table(svytable(~Income_m+Education, Data_women_w),2)
+
 barplot(t1, main = "Below/Above median income women by Educational attainment",col = c("mistyrose", "lavender"),
 xlab = "Educational attainment", names = c("~g8", "g9~nodegree","ass/bach","prof/mas","doc"), 
 ylab = "proportion", legend = c("<$60,000", ">=$60,000"), 
 args.legend = list(title = "income", x = "topright", cex = 1), ylim = c(0, 1.5))
-##<=60000 percentage decreases at higher educational attainment
-##No difference between "1: ~grade8 group" and "2: grade9~no_college_degree group"
-##With "4: master's degree" at least, more than half proportion are above median income
 ```
 Observations:
-
 1. Without college degree, about 80% of them earn less than median income.
-
 2. With master's or doctor's degree, about 40% of them earn less than median income.
 
-
-We will do linear regression to confirm this fact.
+Next, we use a linear regression.
 ```{r}
 fit_edu<-svyglm(factor(Income_m) ~ factor(Education), design = Data_women_w,family=binomial)
 summary(fit_edu)
-##interpretation on logit scale
-##Education2(grade9~college_no_degree), versus Education1(~grade8:baseline) multiplies the odds of being ">=$60000" group by exp(-0.068)
-##Same interpretation as above for Education 3,4,5
-##From Education2(grade9~college_no_degree), the chance of being ">=$60000" group increases at higher educational attainment, 
-##gap between master's and doctor's degree is relatively not much
-
 ```
 Observations:
-
-1. factor2 is not significant.
-
+1. factor2 (grade9~college_no_degree) is not significant
 2. Interpretation for factor3: "associate/bachelor's degree", versus "~grade8"(baseline), multiplies the odds of being ">=$60000" group by exp(0.94372)
-
 3. We can apply the same interpretation for factor 4,5,6.
-
 4. Within college, master, doctor's degree, the chance of being in ">=$60000" group increases at higher educational attainment.
-
 5. However, the gap between master's and doctor's degree is relatively small.
 
-
-We are going to break down each education by occupation.
+To futher understand the effect, we are going to break down each education by occupation.
 ```{r}
 t2<-prop.table(svytable(~Income_m+Occupation+Education, Data_women_w),c(2,3))
 #break down into occupation
-#~grade8
+###~grade8
+
 barplot(t2[,,1],main = "~grade8, by occupation",col = c("mistyrose", "white"),
 xlab = "occupation", names = c('MGR', 'CMM', 'FIN', 'LGL', 'MED' , 'BUS', 'ENG', 'SCI'), 
 ylab = "proportion", legend = c("<$60,000", ">=$60,000"), 
 args.legend = list(title = "Income", x = "topright", cex = 1), ylim = c(0, 1.5))
-##CMM->relatively high proportion of ">=60000 group"
 ```
 Observations:
-
-1. Within "~grade8", "FIN" has the largest proportion of <$60,000 group.
-
-2. "CMM" has the smallest proportion of <$60,000 group.
+1. Within "~grade8", "FIN:finance" has the largest <$60,000 group.
+2. "CMM:computer occs" has the smallest <$60,000 group.
 
 ```{r}
-#grade9~college_no_degree
+###grade9~college_no_degree
 barplot(t2[,,2],main = "grade9~college_no_degree, by occupation",col = c("mistyrose", "white"),
 xlab = "occupation", names = c('MGR', 'CMM', 'FIN', 'LGL', 'MED' , 'BUS', 'ENG', 'SCI'), 
 ylab = "proportion", legend = c("<$60,000", ">=$60,000"), 
 args.legend = list(title = "Income", x = "topright", cex = 1), ylim = c(0, 1.5))
-##~gat CMM field,
 ```
 Observations:
-
-1. Within "grade9~college_no_degree", "SCI" has the largest proportion of <$60,000 group.
-
-2. "CMM" has the smallest proportion of <$60,000 group.
+1. Within "grade9~college_no_degree", "SCI:science" has the largest <$60,000 group.
+2. "CMM:computer occs" has the smallest <$60,000 group.
 ```{r}
-#associate/bachelor
+###associate/bachelor
 barplot(t2[,,3],main = "associate/bachelor, by occupation",col = c("mistyrose", "white"),
 xlab = "occupation", names = c('MGR', 'CMM', 'FIN', 'LGL', 'MED' , 'BUS', 'ENG', 'SCI'), 
 ylab = "proportion", legend = c("<$60,000", ">=$60,000"), 
 args.legend = list(title = "Income", x = "topright", cex = 1), ylim = c(0, 1.5))
-##CMM and ENG is the best, LGL is the worst
 ```
 Observations:
-
-1. Within "associate/bachelor", "LGL" has the largest proportion of <$60,000 group.
-
-2. "CMM" has the smallest proportion of <$60,000 group.
+1. Within "associate/bachelor", "LGL:legal" has the largest <$60,000 group.
+2. "CMM: computer occs" has the smallest <$60,000 group.
 ```{r}
-#master/professional
+###master/professional
 barplot(t2[,,4],main = "master, by occupation",col = c("mistyrose", "white"),
 xlab = "occupation", names = c('MGR', 'CMM', 'FIN', 'LGL', 'MED' , 'BUS', 'ENG', 'SCI'), 
 ylab = "proportion", legend = c("<$60,000", ">=$60,000"), 
 args.legend = list(title = "Income", x = "topright", cex = 1), ylim = c(0, 1.5))
-##same as in bachelor
 ```
 Observations:
-
-1. Within "Master", "LGL" has the largest proportion of <$60,000 group.
-
-2. "CMM" has the smallest proportion of <$60,000 group.
+1. Within "Master", "LGL:legal" has the largest <$60,000 group.
+2. "CMM:computer occs" has the smallest <$60,000 group.
 ```{r}
-#doctor
+###doctor
 barplot(t2[,,5],main = "doctor, by occupation",col = c("mistyrose", "white"),
 xlab = "occupation", names = c('MGR', 'CMM', 'FIN', 'LGL', 'MED' , 'BUS', 'ENG', 'SCI'), 
 ylab = "proportion", legend = c("<$60,000", ">=$60,000"), 
 args.legend = list(title = "Income", x = "topright", cex = 1), ylim = c(0, 1.5))
-##MGR is the best, LGL is the worst
 ```
 Observations:
-
-1. Within "Doctor", "LGL" has the largest proportion of <$60,000 group.
-
-2. "CMM" has the smallest proportion of <$60,000 group.
-
-
-#Race
-Over the years, there has been an increase awareness on the women wage gap and racial social issues. We wanted to understand the effects of your race could potentially have on a women's career. 
-
-First we broke down the data of women by race,
-```{r}
-Race_freq <- ftable(Data_Women$Race)
-Race_freq <- as.data.frame(Race_freq)
-
-plot_ly(Race_freq, labels = Var1, values = Freq, type = "pie",hole = 0.0,name = "Race") %>%
-  layout(title = "Percentage of Women by Race")
-```
-We determined that majority of the women in the workforce are white. To see how this compares to the national average, we compared this chart to the overall race breakdown of the country. Our assumption is that women should make up half of the working force for all races. 
-
-```{r}
-Race_freq_All <- ftable(Data$Race)
-Race_freq_All <- as.data.frame(Race_freq_All)
-
-Race_Compare <- data.frame(Race_freq$Var1,Race_freq$Freq,0.5 *Race_freq_All$Freq,100*(Race_freq$Freq-0.5 *Race_freq_All$Freq)/Race_freq_All$Freq)
-colnames(Race_Compare) <- c('Race','Women','50% of General population','Percentage Difference (%)')
-Race_Compare
-```
-Observation:
-
-1. From the table, we can gather that Black women are 11% higher than the half of the Black workforce. This means more black women are working than man. 
-
-2. All other races have a relatively small difference. 
-
-3. Workforce groups with more men than women are White, Asian, and Others.
-
-
-We also want to look into how women perform in the occupation. We broke up this into three categories: 
-
-1. Women who perform under the weighted mean of women
-
-2. Women who perform above the weighted mean of both genders
-
-3. Women who perform above the weighted mean of men 
-
-These categories will be classified as below, meet, and exceed respectively. 
-
-```{r}
-#Comparing with Histograms
-DSOR_W <- data.frame(Data_sex_occp_race[which(Data_sex_occp_race$Gender==2),])
-
-p <- ggplot(DSOR_W, aes(x=Race,y=MEAN, fill=factor(Race))) +
-            geom_bar(position = "dodge",stat="identity")+
-            facet_grid(. ~ Occupation)+
-            geom_hline(aes(yintercept = MEAN),data=Data_sex_occp_women)+
-            geom_text(aes(1,0.5,label = "Women's Mean"))+
-            labs(title = "Histogram by Race of Females compared to Women's Mean")
-ggplotly(p)
-```
-From the graph, we notices that majority of occupation were not meeting the criteria. To gain a better understand, we took into account he population size. 
-
-
-```{r}
-x <- ftable(Data_Women$Race,Data_Women$Occupation)
-x <- as.data.frame(x)
-x <- x[-31,] #frequency of zero
-
-DSOR_W_Freq <- data.frame(DSOR_W,x$Freq)
-
-Base <- ggplot(DSOR_W_Freq, aes(x=Race,y=MEAN),colour = factor(DSOR_W_Freq$Race)) +
-            facet_grid(. ~ Occupation)+
-            geom_point(aes(size = DSOR_W_Freq$x.Freq,color = factor(DSOR_W_Freq$Race)))+
-            labs(title = "Histogram by Race of Females using Size")+
-            geom_hline(aes(yintercept = MEAN),colour="deeppink1",data=Data_sex_occp_women)+
-            geom_hline(aes(yintercept = MEAN),colour="blue",data=Data_sex_occp_men)+
-            geom_hline(aes(yintercept = MEAN),colour="green",data=Data_occu)
-ggplotly(Base)
-
-```
-Oberservations:
-
-1. Asians women earn significantly higher income than other races.
-
-2. The average for women is very close the White women because they account for most of the workforce.
-
-3. There are no groups of women that are higher than the median of men
-
-From the plot, we also see a lot of minority groups toward the bottom. The frequency for these froups were often very small. To help gain a better understanding, we took out all groups with less than 50 people in the category. 
-```{r}
-DSOR_W_Freq_filtered <- filter(DSOR_W_Freq, x.Freq > 50)
-
-Base_fill <- ggplot(DSOR_W_Freq_filtered, aes(x=Race,y=MEAN),colour = factor(DSOR_W_Freq_filtered$Race)) +
-            facet_grid(. ~ Occupation)+
-            geom_point(aes(size = DSOR_W_Freq_filtered$x.Freq,color = factor(DSOR_W_Freq_filtered$Race)))+
-            labs(title = "Histogram by Race of Females using Size")+
-            geom_hline(aes(yintercept = MEAN),colour="deeppink1",data=Data_sex_occp_women)+
-            geom_hline(aes(yintercept = MEAN),colour="blue",data=Data_sex_occp_men)+
-            geom_hline(aes(yintercept = MEAN),colour="green",data=Data_occu)
-ggplotly(Base_fill)
-```
-Obeservations:
-
-1. Except for Asians and Blacks, all other minority groups earned significantly less than the median. 
-
-2. Black Women earn less than White womens for all occupations, except legal.
-
-3. Lawyers would have the most equal pay relative to the rest of the occupations.
-
-
-From our analysis, we learned the following breakdown of women in the workforce:
-
-Level | Race of Women
-------------- | -------------
-Below | Black, American Indian, Tribe specified, Native Hawaiian, Other, Two or more races
-Meet | Asian, White
-Exceed | None 
-
-
-Through these resulte, their is a significant gap in income for women regardless to race. 
-
-#Marital Status
-Below we analyse the effect of marital status on mean income for women across all occupations, as well as within occupations.
-
-##Familial Responsibilities
-
-Our next variable of interest is women's marital statuses. A common explanation of the gender wage gap is that women make the decision with their families to shift their focus to household responsibilities. We'll be looking at the effect of marriage and motherhood seperately first, then looking how marital statuses of mothers affect their earnings.
-
-```{r, echo = FALSE}
-
-#marital status, subset at specific age to control for experience
-Data_wed_occp <- ddply(Data_women, .(Marriage, Occupation, Age), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
-
-plot(Data_wed_occp$Age, Data_wed_occp$MEAN)
-
-summary(lm(MEAN ~ Marriage + Age + I(Age^2) , data = Data_wed_occp))
-
-#Finance
-Women_FIN<-filter(Data_women, Occupation =="FIN")
-Data_wed_FIN <- ddply(Women_FIN, .(Marriage, Age), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
-
-FIN <- plot_ly(Data_wed_FIN, x = Age, y = MEAN, mode = "markers", opacity = .4, color = Marriage, title = "Women in Finance") 
-FIN <-add_trace(FIN,y = fitted(loess(MEAN ~ Age + as.numeric(Marriage))) , x = Age, color = Marriage) 
-layout(FIN, title = "Women in Finance")
-
-summary(lm(MEAN ~ Marriage + Age + I(Age^2), data = Data_wed_FIN))
-
-
-#Engineering
-
-Women_ENG<-filter(Data_women, Occupation =="ENG")
-Data_wed_ENG <- ddply(Women_ENG, .(Marriage, Age), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
-
-#plotly
-ENG <- plot_ly(Data_wed_ENG, x = Age, y = MEAN, mode = "markers", opacity = .4, color = Marriage, title = "Women in Finance") 
-ENG <-add_trace(ENG,y = fitted(loess(MEAN ~ Age + as.numeric(Marriage))) , x = Age, color = Marriage) 
-layout(ENG, title = "Women in Engineering")
-
-lm1 <- lm(MEAN ~ Marriage + Age + I(Age^2), data = Data_wed_ENG)
-summary(lm1)
-
-#Medicine
-
-Women_MED<-filter(Data_women, Occupation =="MED")
-Data_wed_MED <- ddply(Women_MED, .(Marriage, Age), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
-
-#plotly
-MED <- plot_ly(Data_wed_MED, x = Age, y = MEAN, mode = "markers", opacity = .4, color = Marriage, title = "Women in Finance") 
-MED <-add_trace(MED,y = fitted(loess(MEAN ~ Age + as.numeric(Marriage))) , x = Age, color = Marriage) 
-layout(MED, title = "Women in Finance")
-
-
-summary(lm(MEAN ~ Marriage + Age + I(Age^2), data = Data_wed_MED))
-
-#Science
-
-Women_SCI<-filter(Data_women, Occupation =="SCI")
-Data_wed_SCI <- ddply(Women_SCI, .(Marriage, Age), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
-
-#plotly
-SCI <- plot_ly(Data_wed_SCI, x = Age, y = MEAN, mode = "markers", opacity = .4, color = Marriage, title = "Women in Science") 
-SCI <-add_trace(SCI,y = fitted(loess(MEAN ~ Age + as.numeric(Marriage))) , x = Age, color = Marriage) 
-layout(SCI, title = "Women in Science")
-
-
-summary(lm(MEAN ~ Marriage + Age + I(Age^2), data = Data_wed_SCI))
-
-#Managers
-Women_MGR<-filter(Data_women, Occupation =="MGR")
-Data_wed_MGR <- ddply(Women_MGR, .(Marriage, Age), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
-
-MGR <- plot_ly(Data_wed_MGR, x = Age, y = MEAN, mode = "markers", opacity = .4, color = Marriage, title = "Women in Management") 
-MGR <-add_trace(MGR,y = fitted(loess(MEAN ~ Age + as.numeric(Marriage))) , x = Age, color = Marriage) 
-layout(MGR, title = "Women in Management")
-
-summary(lm(MEAN ~ Marriage + Age + I(Age^2), data = Data_wed_MGR))
-
-
-#Lawyers
-Women_LGL<-filter(Data_women, Occupation =="LGL")
-Data_wed_LGL <- ddply(Women_LGL, .(Marriage, Age), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
-
-LGL <- plot_ly(Data_wed_LGL, x = Age, y = MEAN, mode = "markers", opacity = .4, color = Marriage) 
-LGL <-add_trace(LGL,y = fitted(loess(MEAN ~ Age + as.numeric(Marriage))) , x = Age, color = Marriage) 
-layout(LGL, title = "Women in Law")
-
-summary(lm(MEAN ~ Marriage + Age + I(Age^2), data = Data_wed_LGL))
-
-
-#Business
-
-Women_BUS<-filter(Data_women, Occupation =="BUS")
-Data_wed_BUS <- ddply(Women_BUS, .(Marriage, Age), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
-
-BUS <- plot_ly(Data_wed_BUS, x = Age, y = MEAN, mode = "markers", opacity = .4, color = Marriage) 
-BUS <-add_trace(BUS,y = fitted(loess(MEAN ~ Age + as.numeric(Marriage))) , x = Age, color = Marriage) 
-layout(BUS, title = "Women in Business")
-
-summary(lm(MEAN ~ Marriage + Age + I(Age^2), data = Data_wed_BUS))
-
-#Computer
-
-Women_CMM<-filter(Data_women, Occupation =="CMM")
-Data_wed_CMM <- ddply(Women_CMM, .(Marriage, Age), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
-
-CMM <- plot_ly(Data_wed_CMM, x = Age, y = MEAN, mode = "markers", opacity = .4, color = Marriage) 
-CMM <-add_trace(CMM,y = fitted(loess(MEAN ~ Age + as.numeric(Marriage))) , x = Age, color = Marriage) 
-layout(CMM, title = "Women in Law")
-
-summary(lm(MEAN ~ Marriage + Age + I(Age^2), data = Data_wed_CMM))
-
-``` 
-Observations:
-
-1. Overall,widowed and seperated women make significantly less than married women when occupations are pooled.
-
-2. Marital status has no effect on earning for women in the scientific field
-
-3. Interestingly, for most occupations where marital status is significant, women in their profession who have never been married earn more than married women, whereas widowed and seperated women earn significantly less. Perhaps widowed or seperated women are more likely to have children than never married women, and thus must shoulder more responsibilities outside of work.
- 
-#Marital statuses of mothers
-
-```{r, echo = FALSE}
-MotherMaritalOccupation=select(Data_women, Income,Children,Occupation, Marriage, Age)
-MotherMaritalOccupation <- na.omit(MotherMaritalOccupation)
-MotherMaritalOccupation$Children <- ifelse(MotherMaritalOccupation$Children == 4, 0, 1)
-#detach(package:plyr)
-GroupedMotherMaritalOccupation <-
-  MotherMaritalOccupation %>%
-  na.omit() %>%
-  group_by(Children,Occupation, Marriage, Age) %>% 
-  summarize(
-    AvgIncome = mean(Income),
-    count=n()
-  ) 
-
-GroupedMotherMarital <-
-  MotherMaritalOccupation %>%
-  na.omit() %>%
-  group_by(Children, Marriage, Age) %>% 
-  summarize(
-    AvgIncome = mean(Income),
-    count=n()
-  ) 
-
-
-ggplot(GroupedMotherMarital,aes(y = AvgIncome, x =Age,colour=as.factor(Children))) +
-geom_point() + geom_smooth(method="loess", fill=NA) + facet_wrap(~Marriage, scales= "free")
-
-summary(lm(AvgIncome ~ Age + I(Age^2) + Children*Marriage, data = GroupedMotherMaritalOccupation))
-
-```
-
-Observations: We can see in the summary results of the interaction between marital status and motherhood, single mothers earn significantly less when occupations are pooled and age is controlled.
-
+1. Within "Doctor", "LGL:legal" has the largest <$60,000 group.
+2. "CMM:computer occs" has the smallest <$60,000 group.
+
+Conclusions:
+1. Women without college degree is more likely to earn less than median income.
+2. (-) At any educational attainment,CMM:computer occs has the smallest <$60,000 group.
+3. (+) With the bachelor/master/doctor's degree LGL:legal has the largest >=$60,000 group.
