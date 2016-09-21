@@ -4,7 +4,7 @@ author: "Kanghui Jiang, Erica Kilbride, Hayoung Kim, Wanyi Zhang, and Catherine 
 output: html_notebook
 ---
 
-```{r} 
+```{r eval=FALSE} 
 #Importing Data Set
 ss14pusa = read.csv(file.choose(),header=TRUE)  # read csv file
 ss14pusb = read.csv(file.choose(),header=TRUE)
@@ -27,7 +27,7 @@ ss14pusa=fread("C:/Users/user/Desktop/Statistics/3rd semester/ADS/Project1/csv_p
 ss14pusb=fread("C:/Users/user/Desktop/Statistics/3rd semester/ADS/Project1/csv_pus/ss14pusb.csv",head=TRUE,select=variables)
 ```
 The following shows the columns we imported.
-```{r}
+```{r  eval=FALSE}
 attach(ss14pusa)
 names(ss14pusa)
 ss14pusa_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC, PWGTP)
@@ -46,7 +46,8 @@ write.csv(Data, file = "Data.csv",row.names=TRUE)
 row_to_keep=which(Data$Income>0)
 Data=Data[row_to_keep,]
 ```
-We have renames and categorized multiple categories for readablilty.
+
+We renamed and categorized multiple categories for readablilty.
 ```{r, echo = FALSE}
 #recode OCCP
 class(Data$Occupation) <- "numeric"
@@ -117,6 +118,7 @@ From our results, the survey weights would be insignificant relative to the data
 
 
 #Where is the gap?
+
 Since we know there is a significant wage gap between different professions, we used occupation as a category for our data. We seperated the occupations by groups. Within each group, we divided the men and women and compared their weighted mean.
 ```{r, echo = FALSE}
 
@@ -168,7 +170,9 @@ Perc_sex <- plot_ly(Data_sex_occp_mean_percent, x = Women, y = Occupation, name 
 Perc_sex
 ```
 Oberservations:
+
 1. Medical occupations has the largest disperity between men and women
+
 2. Women in legal occupations are the closest to the median 
 
 
@@ -186,7 +190,6 @@ GroupedMotherHood <-
     AvgIncome = mean(Income)
   ) 
 
-
 ### Bar Chart
 ggplot(GroupedMotherHood, aes(x=Children, y=AvgIncome)) + 
   geom_bar(colour="black", fill="#DD8888", width=.5, stat="identity") + 
@@ -195,12 +198,8 @@ ggplot(GroupedMotherHood, aes(x=Children, y=AvgIncome)) +
   coord_cartesian(ylim = c(50000,70000)) +
   #scale_y_continuous(limits = c(40000,70000),oob = rescale_none) +
   ggtitle("Income for Motherhood")
-
-
-
-### 
 ```
-
+#Write why
 ```{r}
 MotherWorking=select(Data_women, Income,Children,Work_hours)
 #detach(package:plyr)
@@ -213,17 +212,19 @@ GroupedMotherWorking <-
     count=n()
   ) 
 
-library(plotly)
 # note how size is automatically scaled and added as hover text
-
 plot_ly(GroupedMotherWorking, x = Work_hours, y = AvgIncome,size=sqrt(count), color = Children,text = paste("Count: ", count),opacity=1-Children*0.2,mode = "markers")
 
 #plot_ly(GroupedMotherWorking, x = Work_hours, y = AvgIncome, text = paste("Count: ", #count),mode = "markers", opacity=1-Children*0.2,color = Children)
 ```
 Observations:
+
 1. When work_hours smaller than 60Hrs, Avg Income tend to be positively related to work hour.
+
 2. There are generally more females with no Children
+
 3. Females with Children from 6 to 17 often has higher avg income
+
 ```{r}
 MotherOccupation=select(Data_women, Income,Children,Occupation)
 #detach(package:plyr)
@@ -244,9 +245,11 @@ ggplot(GroupedMotherOccupation,aes(x=Children))+geom_point(aes(y=Occupation,size
 #scale_colour_gradientn(colours = terrain.colors(10))
 ```
 Observations:
+
 1. Females with Children from 6 to 17 usually tend to have higher average income as the dot has darker color.
+
 2. Occupation of ENG, MGR and CMM usually tend to have higher salary. On the other hand, female in LGL field always have lower salary
-3. 
+
 
 #Education
 
@@ -287,8 +290,11 @@ args.legend = list(title = "income", x = "topright", cex = 1), ylim = c(0, 1.5))
 ##With "4: master's degree" at least, more than half proportion are above median income
 ```
 Observations:
+
 1. Without college degree, about 80% of them earn less than median income.
+
 2. With master's or doctor's degree, about 40% of them earn less than median income.
+
 
 We will do linear regression to confirm this fact.
 ```{r}
@@ -302,11 +308,17 @@ summary(fit_edu)
 
 ```
 Observations:
+
 1. factor2 is not significant.
+
 2. Interpretation for factor3: "associate/bachelor's degree", versus "~grade8"(baseline), multiplies the odds of being ">=$60000" group by exp(0.94372)
+
 3. We can apply the same interpretation for factor 4,5,6.
+
 4. Within college, master, doctor's degree, the chance of being in ">=$60000" group increases at higher educational attainment.
+
 5. However, the gap between master's and doctor's degree is relatively small.
+
 
 We are going to break down each education by occupation.
 ```{r}
@@ -320,7 +332,9 @@ args.legend = list(title = "Income", x = "topright", cex = 1), ylim = c(0, 1.5))
 ##CMM->relatively high proportion of ">=60000 group"
 ```
 Observations:
+
 1. Within "~grade8", "FIN" has the largest proportion of <$60,000 group.
+
 2. "CMM" has the smallest proportion of <$60,000 group.
 
 ```{r}
@@ -332,7 +346,9 @@ args.legend = list(title = "Income", x = "topright", cex = 1), ylim = c(0, 1.5))
 ##~gat CMM field,
 ```
 Observations:
+
 1. Within "grade9~college_no_degree", "SCI" has the largest proportion of <$60,000 group.
+
 2. "CMM" has the smallest proportion of <$60,000 group.
 ```{r}
 #associate/bachelor
@@ -343,7 +359,9 @@ args.legend = list(title = "Income", x = "topright", cex = 1), ylim = c(0, 1.5))
 ##CMM and ENG is the best, LGL is the worst
 ```
 Observations:
+
 1. Within "associate/bachelor", "LGL" has the largest proportion of <$60,000 group.
+
 2. "CMM" has the smallest proportion of <$60,000 group.
 ```{r}
 #master/professional
@@ -354,7 +372,9 @@ args.legend = list(title = "Income", x = "topright", cex = 1), ylim = c(0, 1.5))
 ##same as in bachelor
 ```
 Observations:
+
 1. Within "Master", "LGL" has the largest proportion of <$60,000 group.
+
 2. "CMM" has the smallest proportion of <$60,000 group.
 ```{r}
 #doctor
@@ -365,8 +385,11 @@ args.legend = list(title = "Income", x = "topright", cex = 1), ylim = c(0, 1.5))
 ##MGR is the best, LGL is the worst
 ```
 Observations:
+
 1. Within "Doctor", "LGL" has the largest proportion of <$60,000 group.
+
 2. "CMM" has the smallest proportion of <$60,000 group.
+
 
 #Race
 Over the years, there has been an increase awareness on the women wage gap and racial social issues. We wanted to understand the effects of your race could potentially have on a women's career. 
@@ -390,15 +413,22 @@ colnames(Race_Compare) <- c('Race','Women','50% of General population','Percenta
 Race_Compare
 ```
 Observation:
+
 1. From the table, we can gather that Black women are 11% higher than the half of the Black workforce. This means more black women are working than man. 
+
 2. All other races have a relatively small difference. 
+
 3. Workforce groups with more men than women are White, Asian, and Others.
 
 
 We also want to look into how women perform in the occupation. We broke up this into three categories: 
+
 1. Women who perform under the weighted mean of women
+
 2. Women who perform above the weighted mean of both genders
+
 3. Women who perform above the weighted mean of men 
+
 These categories will be classified as below, meet, and exceed respectively. 
 
 ```{r}
@@ -434,8 +464,11 @@ ggplotly(Base)
 
 ```
 Oberservations:
+
 1. Asians women earn significantly higher income than other races.
+
 2. The average for women is very close the White women because they account for most of the workforce.
+
 3. There are no groups of women that are higher than the median of men
 
 From the plot, we also see a lot of minority groups toward the bottom. The frequency for these froups were often very small. To help gain a better understanding, we took out all groups with less than 50 people in the category. 
@@ -452,8 +485,11 @@ Base_fill <- ggplot(DSOR_W_Freq_filtered, aes(x=Race,y=MEAN),colour = factor(DSO
 ggplotly(Base_fill)
 ```
 Obeservations:
+
 1. Except for Asians and Blacks, all other minority groups earned significantly less than the median. 
+
 2. Black Women earn less than White womens for all occupations, except legal.
+
 3. Lawyers would have the most equal pay relative to the rest of the occupations.
 
 
@@ -582,7 +618,9 @@ summary(lm(MEAN ~ Marriage + Age + I(Age^2), data = Data_wed_CMM))
 Observations:
 
 1. Overall,widowed and seperated women make significantly less than married women when occupations are pooled.
+
 2. Marital status has no effect on earning for women in the scientific field
+
 3. Interestingly, for most occupations where marital status is significant, women in their profession who have never been married earn more than married women, whereas widowed and seperated women earn significantly less. Perhaps widowed or seperated women are more likely to have children than never married women, and thus must shoulder more responsibilities outside of work.
  
 #Marital statuses of mothers
