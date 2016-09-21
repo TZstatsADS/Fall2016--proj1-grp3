@@ -267,6 +267,7 @@ After investigating how marriage status affect women's income, we looked into th
 At first, we want to have a glance at the income level of the different groups of females. Basically females are divided into four categories regarding the presence and age of Children: Females with Children under 6, Females with Children from 6 to 17, Females with Children under 6 and above 6, Females with No Children. Thus we simply creat a bar chart to illustrate the income difference.
 ```{r}
 Data_Women=Data[Data$Gender==2, ]
+Data_Women$Agegroup <- cut(as.numeric(Data_Women$Age), breaks = c(20,25,30,35,40,45,50,55,60,65))
 Data_women_age <- filter(Data_Women, Age > 20 & Age < 66)
 
 MotherHood=select(Data_women_age, Income,Children)
@@ -328,7 +329,7 @@ Observations:
 
 Next, we wanted to see how the working hours related to the income of women in different group. Will women with children from 6 to 17 have more working hours and generate higher income? Thus we want to use bubble chart to integrate working hours, average income, the group count in a bubble chart so that all the information can be gained in the same graph. 
 ```{r}
-MotherWorking=select(Data_women, Income,Children,Work_hours)
+MotherWorking=select(Data_women_age, Income,Children,Work_hours)
 #detach(package:plyr)
 GroupedMotherWorking <-
   MotherWorking %>%
