@@ -443,6 +443,8 @@ summary(lm(AvgIncome ~ Age + I(Age^2) + Children*Marriage, data = GroupedMotherM
 
 ```
 
+Observations:
+
 ```{r,echo = FALSE, message=FALSE, warning=FALSE, results='hold'}
 
 # Regional Effect
