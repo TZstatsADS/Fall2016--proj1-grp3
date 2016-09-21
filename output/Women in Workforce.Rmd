@@ -326,6 +326,8 @@ ggplot(GroupedMotherOccupation,aes(x=as.factor(Children)))+geom_point(aes(y=Occu
 
 #Education
 
+We expect that educational attainment would affect the women's income. We may want to figure out which degree is the most important factor to earn more than the median income. Furthermore, we will see which occupation has the largest/smallest "below median group" within each educational attainment.
+
 We divided female into 2 groups (>=$60,000 vs <60,000) using weighted median income for working class. ($60,000)
 We will see the proportion of these 2 groups for each educational attainment.
 
@@ -343,8 +345,6 @@ svyquantile(~Data$Income, Data_w, c(.25,.5,.75))
 #split income below/above
 Data$Income_m<-ifelse(Data$Income>=60000,">=$60,000","<$60,000")
 
-#get the data frame needed: education, race effect on income(below/above)
-names(Data)
 Data_women<-subset(Data,Gender=='2')
 attach(Data_women)
 Data_women<-data.frame(Education,Occupation,Income_m,Weight)
@@ -354,14 +354,14 @@ detach(Data_women)
 #get the summary table-education
 Data_women_w<-svydesign(id = ~1, weights = ~Data_women$Weight, data = Data_women)
 t1<-prop.table(svytable(~Income_m+Education, Data_women_w),2)
+```
+```{r}
 barplot(t1, main = "Below/Above median income women by Educational attainment",col = c("mistyrose", "lavender"),
 xlab = "Educational attainment", names = c("~g8", "g9~nodegree","ass/bach","prof/mas","doc"), 
 ylab = "proportion", legend = c("<$60,000", ">=$60,000"), 
 args.legend = list(title = "income", x = "topright", cex = 1), ylim = c(0, 1.5))
-##<=60000 percentage decreases at higher educational attainment
-##No difference between "1: ~grade8 group" and "2: grade9~no_college_degree group"
-##With "4: master's degree" at least, more than half proportion are above median income
 ```
+
 Observations:
 
 1. Without college degree, about 80% of them earn less than median income.
@@ -369,20 +369,15 @@ Observations:
 2. With master's or doctor's degree, about 40% of them earn less than median income.
 
 
-We will do linear regression to confirm this fact.
+Next, we use a linear regression.
 ```{r}
 fit_edu<-svyglm(factor(Income_m) ~ factor(Education), design = Data_women_w,family=binomial)
 summary(fit_edu)
-##interpretation on logit scale
-##Education2(grade9~college_no_degree), versus Education1(~grade8:baseline) multiplies the odds of being ">=$60000" group by exp(-0.068)
-##Same interpretation as above for Education 3,4,5
-##From Education2(grade9~college_no_degree), the chance of being ">=$60000" group increases at higher educational attainment, 
-##gap between master's and doctor's degree is relatively not much
 
 ```
 Observations:
 
-1. factor2 is not significant.
+1. factor2 (grade9~college_no_degree) is not significant.
 
 2. Interpretation for factor3: "associate/bachelor's degree", versus "~grade8"(baseline), multiplies the odds of being ">=$60000" group by exp(0.94372)
 
@@ -393,62 +388,66 @@ Observations:
 5. However, the gap between master's and doctor's degree is relatively small.
 
 
-We are going to break down each education by occupation.
+To futher understand the effect, we are going to break down each education by occupation.
 ```{r}
 t2<-prop.table(svytable(~Income_m+Occupation+Education, Data_women_w),c(2,3))
 #break down into occupation
-#~grade8
+###~grade8
 barplot(t2[,,1],main = "~grade8, by occupation",col = c("mistyrose", "white"),
 xlab = "occupation", names = c('MGR', 'CMM', 'FIN', 'LGL', 'MED' , 'BUS', 'ENG', 'SCI'), 
 ylab = "proportion", legend = c("<$60,000", ">=$60,000"), 
 args.legend = list(title = "Income", x = "topright", cex = 1), ylim = c(0, 1.5))
-##CMM->relatively high proportion of ">=60000 group"
+
 ```
 Observations:
 
-1. Within "~grade8", "FIN" has the largest proportion of <$60,000 group.
+1. Within "~grade8", "FIN:finance" has the largest <$60,000 group.
 
-2. "CMM" has the smallest proportion of <$60,000 group.
+2. "CMM:computer occs" has the smallest <$60,000 group.
+
 
 ```{r}
-#grade9~college_no_degree
+###grade9~college_no_degree
 barplot(t2[,,2],main = "grade9~college_no_degree, by occupation",col = c("mistyrose", "white"),
 xlab = "occupation", names = c('MGR', 'CMM', 'FIN', 'LGL', 'MED' , 'BUS', 'ENG', 'SCI'), 
 ylab = "proportion", legend = c("<$60,000", ">=$60,000"), 
 args.legend = list(title = "Income", x = "topright", cex = 1), ylim = c(0, 1.5))
-##~gat CMM field,
+
 ```
 Observations:
 
-1. Within "grade9~college_no_degree", "SCI" has the largest proportion of <$60,000 group.
+1. Within "grade9~college_no_degree", "SCI:science" has the largest <$60,000 group.
 
-2. "CMM" has the smallest proportion of <$60,000 group.
+2. "CMM:computer occs" has the smallest <$60,000 group.
+
 ```{r}
-#associate/bachelor
+###associate/bachelor
 barplot(t2[,,3],main = "associate/bachelor, by occupation",col = c("mistyrose", "white"),
 xlab = "occupation", names = c('MGR', 'CMM', 'FIN', 'LGL', 'MED' , 'BUS', 'ENG', 'SCI'), 
 ylab = "proportion", legend = c("<$60,000", ">=$60,000"), 
 args.legend = list(title = "Income", x = "topright", cex = 1), ylim = c(0, 1.5))
-##CMM and ENG is the best, LGL is the worst
+
 ```
 Observations:
 
-1. Within "associate/bachelor", "LGL" has the largest proportion of <$60,000 group.
+1. Within "associate/bachelor", "LGL:legal" has the largest <$60,000 group.
 
-2. "CMM" has the smallest proportion of <$60,000 group.
+2. "CMM: computer occs" has the smallest <$60,000 group.
+
 ```{r}
-#master/professional
+###master/professional
 barplot(t2[,,4],main = "master, by occupation",col = c("mistyrose", "white"),
 xlab = "occupation", names = c('MGR', 'CMM', 'FIN', 'LGL', 'MED' , 'BUS', 'ENG', 'SCI'), 
 ylab = "proportion", legend = c("<$60,000", ">=$60,000"), 
 args.legend = list(title = "Income", x = "topright", cex = 1), ylim = c(0, 1.5))
-##same as in bachelor
+
 ```
 Observations:
 
-1. Within "Master", "LGL" has the largest proportion of <$60,000 group.
+1. Within "Master", "LGL:legal" has the largest <$60,000 group.
 
-2. "CMM" has the smallest proportion of <$60,000 group.
+2. "CMM:computer occs" has the smallest <$60,000 group.
+
 ```{r}
 #doctor
 barplot(t2[,,5],main = "doctor, by occupation",col = c("mistyrose", "white"),
@@ -459,9 +458,18 @@ args.legend = list(title = "Income", x = "topright", cex = 1), ylim = c(0, 1.5))
 ```
 Observations:
 
-1. Within "Doctor", "LGL" has the largest proportion of <$60,000 group.
+1. Within "Doctor", "LGL:legal" has the largest <$60,000 group.
 
-2. "CMM" has the smallest proportion of <$60,000 group.
+2. "CMM:computer occs" has the smallest <$60,000 group.
+
+Conclusions:
+
+1. Women without college degree is more likely to earn less than median income.
+
+2. (-) At any educational attainment,CMM:computer occs has the smallest <$60,000 group.
+
+3. (+) With the bachelor/master/doctor's degree LGL:legal has the largest >=$60,000 group.
+
 
 
 #Race
