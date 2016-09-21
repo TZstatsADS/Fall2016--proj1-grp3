@@ -397,7 +397,10 @@ GroupedMotherMarital <-
 
 ggplot(GroupedMotherMarital,aes(y = AvgIncome, x =Age,colour=as.factor(Children))) +
 geom_point() + geom_smooth(method="loess", fill=NA) + facet_wrap(~Marriage, scales= "free")
+summary(lm(AvgIncome ~ Age + I(Age^2) + Children*Marriage, data = GroupedMotherMaritalOccupation))
 ```
+
+Observations: We can see in the summary results of the interaction between marital status and motherhood, single mothers earn significantly less when occupations are pooled and age is controlled.
 
 #Education
 
@@ -750,20 +753,10 @@ svytable(~Gender, design = Data.w)
 # Take my interested variable 'State' as an example, the difference between the unweighted and weighted ratio is really small
 prop.table(table(Data$State)) - prop.table(svytable(~State, design = Data.w))
 
-# Ultimately, the difference for each income level between unweighted and weighted is small too
 prop.table(table(Data$Income)) - prop.table(svytable(~Income, design = Data.w))
 
 #median wage for each occupation by gender (just to acknowledge that there *is* a gender gap)
 #factor marriage and change labels
 ```
-From our results, the survey weights would be insignificant relative to the data. ...
-
-
-
-
-summary(lm(AvgIncome ~ Age + I(Age^2) + Children*Marriage, data = GroupedMotherMaritalOccupation))
-
-```
-
-Observations: We can see in the summary results of the interaction between marital status and motherhood, single mothers earn significantly less when occupations are pooled and age is controlled.
+From our results, the survey weights would be insignificant relative to the data. The difference for each income level between unweighted and weighted is too small.
 
