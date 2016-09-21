@@ -190,7 +190,6 @@ The breakdown of motherhood is
 At first, we want to have a glance at the income level of the different groups of females. Basically females are divided into four categories regarding the presence and age of Children: Females with Children under 6, Females with Children from 6 to 17, Females with Children under 6 and above 6, Females with No Children. Thus we simply creat a bar chart to illustrate the income difference.
 ```{r}
 Data_women <- filter(Data, Gender == 2)
-Data_women$Agegroup <- cut(as.numeric(Data_women$Age), breaks = c(20,25,30,35,40,45,50,55,60,65))
 Data_women <- filter(Data_women, Age > 20 & Age < 66)
 
 MotherHood=select(Data_women, Income,Children)
