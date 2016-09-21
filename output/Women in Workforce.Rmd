@@ -83,7 +83,6 @@ levels(Data$Race) <- c('White', 'Black', 'American Indian','Alaska Native','Trib
 
 #Recode Region
 #https://en.wikipedia.org/wiki/List_of_regions_of_the_United_States#/media/File:Census_Regions_and_Division_of_the_United_States.svg
-Data$Region <- recode(Data$State,c(09,23,25,33,44,59,34,36,42)='Northeast',c(17,18,26,38,55,19,20,27,29,31,38,46)='Mid West', c(10,12,13,24,37,45,51,11,54,01,21,28,47,05,22,40,48)='South',c(04,08,16,30,32,35,49,50,02,06,15,41,53)='West'))
 
 require(car)
 Data$Region <- recode(Data$State,"c(09,23,25,33,44,59,34,36,42)='Northeast';c(17,18,26,38,55,19,20,27,29,31,38,46,39)='Midwest'; c(10,12,13,24,37,45,51,11,54,01,21,28,47,05,22,40,48)='South';c(04,08,16,30,32,35,49,50,02,06,15,41,53,56)='West';'72'='Puerto Rico'")
@@ -539,8 +538,83 @@ Conclusions:
 2. (-) At any educational attainment,CMM:computer occs has the smallest <$60,000 group.
 
 3. (+) With the bachelor/master/doctor's degree LGL:legal has the largest >=$60,000 group.
+  
+  
+  
+# Regional
 
+You cannot choose where you were born, but you can choose where you live. Different places sends different messages and attracts different people. In this section we are interested to see regional effect on women's income in the US. The main question here is: in which locations are women better or worse off?
 
+First, we want to look at women's income boxplots in all 4 regions to better understand women's income distribution. 
+
+```{r,echo = FALSE, message=FALSE, warning=FALSE, results='hold'}
+
+DW=Data[Data$Gender==2, ]
+
+# Recode State Names before boxplot
+require(readr)
+statenames <- read_csv("~/Google Drive/Columbia/5243 ADS/Project 1/data/statenames.csv")
+names(DW)[9]<-"code"
+DW.n <- merge(DW, statenames, by="code")
+
+# boxplot of each region to see distribution
+require(plotly)
+plot_ly(DW, x = Income, color = Region, type = "box")
+```
+The boxplots of women's income show that despite that all distributions are highly skewed to the right, the Northeast Region has the highest women's income level of all 4 regions, followed by the West; Midwest has the lowest women's income level, whereas South is only slightly better off than that. Then we will break down to state level to investigate further on women's income level.
+
+Income levels can be affected by many things. Cost of living is one of them. For example, In New York, everthing cost a little more than many other parts of the US, so people will only thrive by earning more money. Therefore, in order to remove the effect of cost of living that differs in different states, we calculate the percentage of median of each woman's income by state and draw boxplot according to that.
+
+```{r,echo = FALSE, message=FALSE, warning=FALSE, results='hold'}
+#percentage median of women and men in each state to remove cost of living
+require(dplyr)
+GenMedian=aggregate(Income~State,Data,median)
+names(GenMedian)[1]<-"code"
+GenMedian <- merge(GenMedian, statenames, by="code")
+AllMedian=GenMedian$Income[match(DW.n$name,GenMedian$name)]
+IncomeState=cbind(DW.n$Income/AllMedian,DW.n$name)
+colnames(IncomeState)<-c("Percentage_of_Median","State")
+Perc=as.data.frame(IncomeState)
+Perc$Percentage_of_Median <- as.numeric(as.character(Perc$Percentage_of_Median))
+plot_ly(Perc, y = Percentage_of_Median, color = State, type = "box", title = "2014 Womens Percentage of Median Income by State")
+```
+From this irisdescent boxplot by state, we can see that New York definitely goes ahead (despite that its cost of living is already high), so does Connecticut with more large extreme values; however California has the highest upper whisker and largest portion of upper middle income; Utah and Wyoming are the worst off.
+  
+Then we want to decide locations where women will thrive most financially (relatively to men), so we plot women's median of percentage income by state in a US map, which shows the percentage of statewise median that half of women has income below. In perfect equal-gender scenarios, the percentage should be 1, which means half of women have income below the exact statewise median.
+    
+```{r,echo = FALSE, message=FALSE, warning=FALSE, results='hold'}
+# Map women's median of percentage of median by state
+PercM <- aggregate(Percentage_of_Median~State,Perc, median)
+names(PercM)[1]<-"name"
+PM <- merge(PercM, statenames, by="name")
+
+# light grey boundaries
+l <- list(color = toRGB("white"), width = 1)
+# specify some map projection/options
+g <- list(
+  scope = 'usa',
+  projection = list(type = 'albers usa'),
+  showlakes = TRUE,
+  lakecolor = toRGB('white')
+)
+plot_ly(PM, z = Percentage_of_Median, locations = abbr, text=name, type = 'choropleth',
+        locationmode = 'USA-states', color = Percentage_of_Median, colors = 'Blues',
+        marker = list(line = l), colorbar = list(title = "Median Percentage")) %>%
+  layout(title = '2014 Median of Woman Percentage Income by State', geo = g)
+
+```
+This map clearly shows that Utah is where women thrive most financially (relatively to men). Half of women in Utah have income below 68.97% of state median, compared to 100% in the perfect equal-gender situation. Surprisingly (at least to us), D.C. tops among all states with a 93%, followed by Nevada 92% and Arizona 90%.
+  
+  
+Observation: Women's income distributions in each state are all highly skewed to the right with lots of large extreme values. 
+  
+1. The Northeast Region has the highest women's income level of all 4 regions in the US.
+  
+2. After excluding statewise differences e.g. cost of living, women in New York and Connecticut tend to have higher incomes, California has the highest upper whisker and largest portion of upper middle income, and Utah and Wyoming are the worst off. 
+  
+3. By comparing women's income medians with state medians, we see that half of Utah's women have income below 69% of state median, which is the lowest percentage among all states. Woman in D.C., Nevada, and Arizona have income medians closest to state median, with percentage above 90%, whereas other states' are much lower.
+    
+    
 #Race
 
 Over the years, there has been an increase awareness on the women wage gap and racial social issues. We wanted to understand the effects of a women's race could potentially have on a women's career. 
