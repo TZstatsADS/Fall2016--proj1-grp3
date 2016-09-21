@@ -207,6 +207,7 @@ We divided female into 2 groups (>=$60,000 vs <60,000) using weighted median inc
 We will see the proportion of these 2 groups for each educational attainment.
 ```{r}
 #Recode Education : used number as it is order statistics
+library(car)
 Data$Education <- recode(Data$Education,"1:11='1';12:19='2';20:21='3';22:23='4';24='5'")
 
 #Calculate weighted median to split income below/above
