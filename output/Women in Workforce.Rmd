@@ -20,8 +20,8 @@ We started by importing the data set from the United States Census Bureau.
 ss14pusa = read.csv(file.choose(),header=TRUE)  # read csv file
 ss14pusb = read.csv(file.choose(),header=TRUE)
 ```
-For our anaylsis, we used dplyr, plyr, dplyr, rcokeh, ggplot2, plotly, car, survey, and googleVis.  
-```{r echo = FALSE}
+For our anaylsis, we used dplyr, plyr, dplyr, rcokeh, ggplot2, plotly, car, survey, readr, and googleVis.  
+```{r echo = FALSE, message=FALSE}
 #Libraries
 require(dplyr)
 require(plyr)
@@ -32,19 +32,13 @@ require(plotly)
 require(googleVis)
 require(car)
 require(survey)
+require(readr)
 ```
 
-```{r, eval = FALSE}
-#Importing Data Set in a faster way
-library(data.table)
-variables=c("SEX","OCCP","WKHP","MAR","WAGP","SCHL","ESP","RAC1P","ST","PAOC","PWGTP")
-ss14pusa=fread("C:/Users/user/Desktop/Statistics/3rd semester/ADS/Project1/csv_pus/ss14pusa.csv",head=TRUE,select=variables)
-ss14pusb=fread("C:/Users/user/Desktop/Statistics/3rd semester/ADS/Project1/csv_pus/ss14pusb.csv",head=TRUE,select=variables)
-```
 The following shows the columns we imported.
-```{r  echo=FALSE}
+```{r  message=FALSE}
 attach(ss14pusa)
-names(ss14pusa)
+#names(ss14pusa)
 ss14pusa_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC, PWGTP, AGEP)
 detach(ss14pusa)
 
@@ -53,7 +47,7 @@ ss14pusb_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC, PWG
 detach(ss14pusb)
 
 Data = rbind(ss14pusa_edit,ss14pusb_edit)
-colnames(Data) <- c("Gender","Occupation", "Work_hours", "Marriage", "Income", "Education" ,"Parental_Occupation", "Race", "State", "Children", "Weight")
+colnames(Data) <- c("Gender","Occupation", "Work_hours", "Marriage", "Income", "Education" ,"Parental_Occupation", "Race", "State", "Children", "Weight","Age")
 
 #write.csv(Data, file = "Data.csv",row.names=TRUE)
 
@@ -64,7 +58,7 @@ Data=Data[row_to_keep,]
 We renamed and categorized multiple categories for readablilty.
 
 Note: we used eight high paying occupation to categorize jobs
-```{r, echo = FALSE}
+```{r, message = FALSE, warnings = FALSE}
 #recode OCCP
 class(Data$Occupation) <- "numeric"
 Data$Occupation <- ifelse(Data$Occupation >= 10 & Data$Occupation <= 430, 1, Data$Occupation)
@@ -86,8 +80,6 @@ levels(Data$Race) <- c('White', 'Black', 'American Indian','Alaska Native','Trib
 
 #Recode Region
 #https://en.wikipedia.org/wiki/List_of_regions_of_the_United_States#/media/File:Census_Regions_and_Division_of_the_United_States.svg
-
-require(car)
 Data$Region <- recode(Data$State,"c(09,23,25,33,44,59,34,36,42)='Northeast';c(17,18,26,38,55,19,20,27,29,31,38,46,39)='Midwest'; c(10,12,13,24,37,45,51,11,54,01,21,28,47,05,22,40,48)='South';c(04,08,16,30,32,35,49,50,02,06,15,41,53,56)='West';'72'='Puerto Rico'")
 
 # Recode Division
@@ -99,6 +91,8 @@ levels(Data$Marriage) <- c("Married", "Widowed", "Divorced", "Seperated", "Never
 
 # Recode Education
 Data$Education <- recode(Data$Education,"1:11='1';12:19='2';20:21='3';22:23='4';24='5'")
+
+colnames(Data) <- c("Gender","Occupation", "Work_hours", "Marriage", "Income", "Education" ,"Parental_Occupation", "Race", "State", "Children", "Weight","Age","Region","Division")
 ```
 Based on the eight occupations, we plot the weighted mean of men and women to compare the gap.
 ```{r, echo = FALSE}
@@ -155,7 +149,7 @@ Our next variable of interest is women's marital statuses. A common explanation 
 ##Marital Status
 Below we analyse the effect of marital status on mean income for women across all occupations, as well as within occupations.
 ```{r, echo = FALSE}
-
+Data_women <- filter(Data, Gender == 2)
 #marital status, subset at specific age to control for experience
 Data_wed_occp <- ddply(Data_women, .(Marriage, Occupation, Age), summarise, MEAN = weighted.mean(Income, Weight, na.rm = T))
 
@@ -272,8 +266,8 @@ After investigating how marriage status affect women's income, we looked into th
 
 At first, we want to have a glance at the income level of the different groups of females. Basically females are divided into four categories regarding the presence and age of Children: Females with Children under 6, Females with Children from 6 to 17, Females with Children under 6 and above 6, Females with No Children. Thus we simply creat a bar chart to illustrate the income difference.
 ```{r}
-Data_women <- filter(Data, Gender == 2)
-Data_women_age <- filter(Data_women, Age > 20 & Age < 66)
+Data_Women=Data[Data$Gender==2, ]
+Data_women_age <- filter(Data_Women, Age > 20 & Age < 66)
 
 MotherHood=select(Data_women_age, Income,Children)
 GroupedMotherHood <-
@@ -414,7 +408,6 @@ We will see the proportion of these 2 groups for each educational attainment.
 
 ```{r}
 #Calculate weighted median to split income below/above
-library(survey)
 Data_w<-svydesign(id = ~1, weights = ~Data$Weight, data = Data)
 svyquantile(~Data$Income, Data_w, c(.25,.5,.75))
 ##Median income=$60000
@@ -754,9 +747,9 @@ table(Data$Gender)
 svytable(~Gender, design = Data.w)
 
 # Take my interested variable 'State' as an example, the difference between the unweighted and weighted ratio is really small
-as.dataframe(prop.table(table(Data$State)) - prop.table(svytable(~State, design = Data.w)))
+as.data.frame(prop.table(table(Data$State)) - prop.table(svytable(~State, design = Data.w)))
 
-as.dataframe(prop.table(table(Data$Income)) - prop.table(svytable(~Income, design = Data.w)))
+as.data.frame(prop.table(table(Data$Income)) - prop.table(svytable(~Income, design = Data.w)))
 
 #median wage for each occupation by gender (just to acknowledge that there *is* a gender gap)
 #factor marriage and change labels
