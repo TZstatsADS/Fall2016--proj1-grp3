@@ -56,7 +56,8 @@ Data$Occupation <- ifelse(Data$Occupation >= 510 & Data$Occupation <= 740, 6, Da
 Data$Occupation <- ifelse(Data$Occupation >= 1300 & Data$Occupation <= 1560, 7, Data$Occupation)
 Data$Occupation <- ifelse(Data$Occupation >= 1600 & Data$Occupation <= 1965, 8, Data$Occupation)
 
-Data <- filter(Data, Occupation %in% c(1:8))
+row_to_keep2=which(Data$Occupation%in% c(1:8))
+Data <- Data[row_to_keep2,]
 Data$Occupation <- as.factor(Data$Occupation)
 
 levels(Data$Occupation) <- c('MGR', 'CMM', 'FIN', 'LGL', 'MED' , 'BUS', 'ENG', 'SCI')
@@ -77,36 +78,88 @@ Data$Education <- recode(Data$Education,"1:11='1';12:19='2';20:21='3';22:23='4';
 library(survey)
 Data_w<-svydesign(id = ~1, weights = ~Data$Weight, data = Data)
 svyquantile(~Data$Income, Data_w, c(.25,.5,.75))
-##Median income=$30000
+##Median income=$60000
 
 #split income below/above
-Data$Income_m<-ifelse(Data$Income>=30000,"2.above","1.below")
+Data$Income_m<-ifelse(Data$Income>=60000,">=$60,000","<$60,000")
 
 #get the data frame needed: education, race effect on income(below/above)
 names(Data)
 Data_women<-subset(Data,Gender=='2')
 attach(Data_women)
-Data_women<-data.frame(Education,Race,Income_m,Weight)
+Data_women<-data.frame(Education,Occupation,Income_m,Weight)
 detach(Data_women)
 
 #get the summary table-education
 Data_women_w<-svydesign(id = ~1, weights = ~Data_women$Weight, data = Data_women)
 t1<-prop.table(svytable(~Income_m+Education, Data_women_w),2)
 barplot(t1, main = "Below/Above median income women by Educational attainment",col = c("mistyrose", "lavender"),
-xlab = "Educational attainment", names = c("~grade8", "grade9~nodegree","associate/bachelor","professional/master","doctor"), 
-ylab = "proportion", legend = c("Below median income", "Above median income"), 
-args.legend = list(title = "Educational attainment", x = "topright", cex = 1), ylim = c(0, 1.5))
-##Below percentage decreases at higher educational attainment
-##Without dgree more than half are below median income
-
+xlab = "Educational attainment", names = c("~g8", "g9~nodegree","ass/bach","prof/mas","doc"), 
+ylab = "proportion", legend = c("<$60,000", ">=$60,000"), 
+args.legend = list(title = "income", x = "topright", cex = 1), ylim = c(0, 1.5))
+##<=60000 percentage decreases at higher educational attainment
+##No difference between "1: ~grade8 group" and "2: grade9~no_college_degree group"
+##With "4: master's degree" at least, more than half proportion are above median income
+```
+```{r}
 fit_edu<-svyglm(factor(Income_m) ~ factor(Education), design = Data_women_w,family=binomial)
 summary(fit_edu)
-##every factor is significant - interpretation on logit scale
-##Education2, versus Education1(~grade8:baseline) multiplies the odds of being above $30000 group by exp(1.03)
-##???at higher educational attainment, the chance of being ¡°above $30000¡± group increases
-##gap between 2-3 is the largest, college degree is important to be in above $30000 group!
-##I would categorize "women without college degree" as vulnerable women
+##interpretation on logit scale
+##Education2(grade9~college_no_degree), versus Education1(~grade8:baseline) multiplies the odds of being ">=$60000" group by exp(-0.068)
+##Same interpretation as above for Education 3,4,5
+##From Education2(grade9~college_no_degree), the chance of being ">=$60000" group increases at higher educational attainment, 
+##gap between master's and doctor's degree is relatively not much
+
 ```
+
+```{r}
+t2<-prop.table(svytable(~Income_m+Occupation+Education, Data_women_w),c(2,3))
+#break down into occupation
+#~grade8
+barplot(t2[,,1],main = "~grade8, by occupation",col = c("mistyrose", "white"),
+xlab = "occupation", names = c('MGR', 'CMM', 'FIN', 'LGL', 'MED' , 'BUS', 'ENG', 'SCI'), 
+ylab = "proportion", legend = c("<$60,000", ">=$60,000"), 
+args.legend = list(title = "Income", x = "topright", cex = 1), ylim = c(0, 1.5))
+##CMM->relatively high proportion of ">=60000 group"
+```
+
+```{r}
+#grade9~college_no_degree
+barplot(t2[,,2],main = "grade9~college_no_degree, by occupation",col = c("mistyrose", "white"),
+xlab = "occupation", names = c('MGR', 'CMM', 'FIN', 'LGL', 'MED' , 'BUS', 'ENG', 'SCI'), 
+ylab = "proportion", legend = c("<$60,000", ">=$60,000"), 
+args.legend = list(title = "Income", x = "topright", cex = 1), ylim = c(0, 1.5))
+##~gat CMM field,
+```
+
+```{r}
+#associate/bachelor
+barplot(t2[,,3],main = "associate/bachelor, by occupation",col = c("mistyrose", "white"),
+xlab = "occupation", names = c('MGR', 'CMM', 'FIN', 'LGL', 'MED' , 'BUS', 'ENG', 'SCI'), 
+ylab = "proportion", legend = c("<$60,000", ">=$60,000"), 
+args.legend = list(title = "Income", x = "topright", cex = 1), ylim = c(0, 1.5))
+##CMM and ENG is the best, LGL is the worst
+```
+
+```{r}
+#master/professional
+barplot(t2[,,4],main = "master, by occupation",col = c("mistyrose", "white"),
+xlab = "occupation", names = c('MGR', 'CMM', 'FIN', 'LGL', 'MED' , 'BUS', 'ENG', 'SCI'), 
+ylab = "proportion", legend = c("<$60,000", ">=$60,000"), 
+args.legend = list(title = "Income", x = "topright", cex = 1), ylim = c(0, 1.5))
+##same as in bachelor
+```
+
+```{r}
+#doctor
+barplot(t2[,,5],main = "doctor, by occupation",col = c("mistyrose", "white"),
+xlab = "occupation", names = c('MGR', 'CMM', 'FIN', 'LGL', 'MED' , 'BUS', 'ENG', 'SCI'), 
+ylab = "proportion", legend = c("<$60,000", ">=$60,000"), 
+args.legend = list(title = "Income", x = "topright", cex = 1), ylim = c(0, 1.5))
+##MGR is the best, LGL is the worst
+```
+
+
 
 ```{r, echo = FALSE}
 
