@@ -14,7 +14,7 @@ Since we know there is a significant wage gap between different professions, we 
 
 
 We started by importing the data set from the United States Census Bureau.
-```{r eval=FALSE} 
+```{r echo=FALSE} 
 #Importing Data Set
 # www2.census.gov/programs-surveys/acs/data/pums/2014/1-Year/csv_pus.zip
 ss14pusa = read.csv(file.choose(),header=TRUE)  # read csv file
@@ -34,7 +34,7 @@ require(car)
 require(survey)
 ```
 
-```{r, echo = FALSE}
+```{r, eval = FALSE}
 #Importing Data Set in a faster way
 library(data.table)
 variables=c("SEX","OCCP","WKHP","MAR","WAGP","SCHL","ESP","RAC1P","ST","PAOC","PWGTP")
@@ -42,7 +42,7 @@ ss14pusa=fread("C:/Users/user/Desktop/Statistics/3rd semester/ADS/Project1/csv_p
 ss14pusb=fread("C:/Users/user/Desktop/Statistics/3rd semester/ADS/Project1/csv_pus/ss14pusb.csv",head=TRUE,select=variables)
 ```
 The following shows the columns we imported.
-```{r  eval=FALSE}
+```{r  echo=FALSE}
 attach(ss14pusa)
 names(ss14pusa)
 ss14pusa_edit = data.frame(SEX,OCCP,WKHP,MAR,WAGP,SCHL,ESP, RAC1P, ST, PAOC, PWGTP, AGEP)
