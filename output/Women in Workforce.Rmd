@@ -368,7 +368,7 @@ Observations:
 2. "CMM" has the smallest proportion of <$60,000 group.
 
 #Race
-Reason we investigated this? With women wage gap and the increase in social causes, we wanted to understand the effects of your race could potentially have on a women's career. 
+Over the years, there has been an increase awareness on the women wage gap and racial social issues. We wanted to understand the effects of your race could potentially have on a women's career. 
 
 First we broke down the data of women by race,
 ```{r}
@@ -455,12 +455,24 @@ Obeservations:
 2. Black Women earn less than White womens for all occupations, except legal.
 3. Lawyers would have the most equal pay relative to the rest of the occupations.
 
-##Familial Responsibilities
 
-Our next variable of interest is women's marital statuses. A common explanation of the gender wage gap is that women make the decision with their families to shift their focus to household responsibilities. We'll be looking at the effect of marriage and motherhood seperately first, then looking how marital statuses of mothers affect their earnings.
+From our analysis, we learned the following breakdown of women in the workforce:
+
+Level | Race of Women
+------------- | -------------
+Below | Black, American Indian, Tribe specified, Native Hawaiian, Other, Two or more races
+Meet | Asian, White
+Exceed | None 
+
+
+Through these resulte, their is a significant gap in income for women regardless to race. 
 
 #Marital Status
 Below we analyse the effect of marital status on mean income for women across all occupations, as well as within occupations.
+
+##Familial Responsibilities
+
+Our next variable of interest is women's marital statuses. A common explanation of the gender wage gap is that women make the decision with their families to shift their focus to household responsibilities. We'll be looking at the effect of marriage and motherhood seperately first, then looking how marital statuses of mothers affect their earnings.
 
 ```{r, echo = FALSE}
 
