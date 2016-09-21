@@ -11,7 +11,7 @@ Term: Fall 2016
 	+ Hayoung Kim
 	+ Wanyi Zhang
 	+ Catherine Zhao
-+ Project summary: We are investigating women in the workforce. We are trying to understand what properties that could potentially help a women to have a higher income. We will be using race, education, marriage status, motherhood, location, and a combination of those to help identify what qualities will help a women.  
++ Project summary: We are investigating women in the workforce. By identifying what properties could potentially help a women earn a higher income, we explored using race, education, marriage status, motherhood, location, and a combination of those.
 	
 **Contribution statement**: ([default](doc/a_note_on_contributions.md)) All team members contributed equally in all stages of this project. All team members approve our work presented in this GitHub repository including this contributions statement. 
 
