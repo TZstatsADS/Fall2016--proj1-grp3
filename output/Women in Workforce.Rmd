@@ -1,5 +1,6 @@
 ---
 title: "Women in Work Force"
+author: "Kanghui Jiang, Erica Kilbride, Hayoung Kim, Wanyi Zhang, and Catherine Zhao"
 output: html_notebook
 ---
 
