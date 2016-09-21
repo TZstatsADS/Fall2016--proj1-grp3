@@ -4,6 +4,9 @@ author: "Kanghui Jiang, Erica Kilbride, Hayoung Kim, Wanyi Zhang, and Catherine 
 date: September 21 2016
 output: html_notebook
 ---
+#Beyond the Gender Wage Gap
+
+Much attention, both academically and journalistically, has been paid to the "Gender Wage Gap" (e.g. http://inequality.stanford.edu/_media/pdf/key_issues/gender_research.pdf). As this is well-tred territory, our team is interested in looking beyond the gender wage gap and analyzing the inter-gender wage gap. That is, within women in the workforce, are there identifiables gaps in earnings? The following report both confirms a gender wage gap across occupations and identifies gaps among several characteristics of women working within each occupation.
 
 #Where is the gap?
 
@@ -751,9 +754,9 @@ table(Data$Gender)
 svytable(~Gender, design = Data.w)
 
 # Take my interested variable 'State' as an example, the difference between the unweighted and weighted ratio is really small
-prop.table(table(Data$State)) - prop.table(svytable(~State, design = Data.w))
+as.dataframe(prop.table(table(Data$State)) - prop.table(svytable(~State, design = Data.w)))
 
-prop.table(table(Data$Income)) - prop.table(svytable(~Income, design = Data.w))
+as.dataframe(prop.table(table(Data$Income)) - prop.table(svytable(~Income, design = Data.w)))
 
 #median wage for each occupation by gender (just to acknowledge that there *is* a gender gap)
 #factor marriage and change labels
